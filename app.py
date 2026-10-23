@@ -189,8 +189,8 @@ with st.sidebar:
 if page == "📊 Dashboard":
     st.markdown("""
     <div class="brand-hero">
-        <h1 class="brand-title">IncuBrix Social Media Content Engine</h1>
-        <div class="brand-subtitle">Real-time telemetry, persistent asset repository, and quality validation metrics</div>
+        <h1 class="brand-title">IncuBrix Creator Operations Hub</h1>
+        <div class="brand-subtitle">Automated multi-platform content engine turning 1 long-form piece into ready-to-publish assets</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -201,16 +201,24 @@ if page == "📊 Dashboard":
     by_status = metrics["by_status"]
     recent_runs = metrics["recent_runs"]
 
-    # Metric Row 1
+    # Creator Metrics Row
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">Total Assets</div>
+            <div class="metric-label">Content Assets</div>
             <div class="metric-value">{total_assets}</div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
+        approved_count = by_status.get("APPROVED", 0)
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">Ready to Publish</div>
+            <div class="metric-value">{approved_count}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c3:
         videos_count = by_format.get("video", 0)
         st.markdown(f"""
         <div class="metric-card">
@@ -218,81 +226,100 @@ if page == "📊 Dashboard":
             <div class="metric-value">{videos_count}</div>
         </div>
         """, unsafe_allow_html=True)
-    with c3:
+    with c4:
         carousels_count = by_format.get("carousel", 0) + by_format.get("graphic", 0)
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">Carousels / Graphics</div>
+            <div class="metric-label">Visual Decks (PNG)</div>
             <div class="metric-value">{carousels_count}</div>
         </div>
         """, unsafe_allow_html=True)
-    with c4:
+    with c5:
         native_count = by_format.get("native_post", 0)
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">Native Articles/Posts</div>
+            <div class="metric-label">Articles & Posts</div>
             <div class="metric-value">{native_count}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c5:
-        approved_count = by_status.get("APPROVED", 0)
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Approved Assets</div>
-            <div class="metric-value">{approved_count} / {total_assets}</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Detailed Layout
+    # Creator Content Layout: Visual Mix & Publishing Feed
     col_left, col_right = st.columns([3, 2])
 
     with col_left:
-        st.markdown("### 🚀 Recent Generation Runs")
-        if recent_runs:
-            runs_df = pd.DataFrame(recent_runs)[
-                ["run_id", "mode", "requested_count", "successful_count", "runtime_seconds", "estimated_ai_cost", "status"]
-            ]
-            runs_df.columns = ["Run ID", "Mode", "Requested", "Success", "Runtime (s)", "Est. AI Cost ($)", "Status"]
-            st.dataframe(runs_df, use_container_width=True)
-        else:
-            st.info("No generation runs recorded in the database yet. Head over to **Input & Campaign Setup** to generate your first asset suite!")
-
-        st.markdown("### 🌐 Platform Distribution")
+        st.markdown("### 🌐 Platform Content Distribution")
         if by_platform:
             plat_df = pd.DataFrame(list(by_platform.items()), columns=["Platform", "Asset Count"])
-            st.bar_chart(plat_df.set_index("Platform"))
+            st.bar_chart(plat_df.set_index("Platform"), color="#6366F1")
         else:
             st.caption("Awaiting initial asset generation.")
 
-    with col_right:
-        st.markdown("### 🛡️ Quality Validation Summary")
-        if total_assets > 0:
-            pass_count = metrics["by_quality"].get("PASS", 0)
-            warn_count = metrics["by_quality"].get("WARNING", 0)
-            fail_count = metrics["by_quality"].get("FAIL", 0)
-            rate = round((pass_count / total_assets) * 100, 1)
-
-            st.write(f"**Compliance Pass Rate:** `{rate}%` (Target: >= 85%)")
-            st.progress(min(1.0, rate / 100.0))
-
-            q1, q2, q3 = st.columns(3)
-            q1.markdown(f'<span class="badge-pass">PASS: {pass_count}</span>', unsafe_allow_html=True)
-            q2.markdown(f'<span class="badge-warn">WARN: {warn_count}</span>', unsafe_allow_html=True)
-            q3.markdown(f'<span class="badge-fail">FAIL: {fail_count}</span>', unsafe_allow_html=True)
+        st.markdown("### 📅 Upcoming Publishing Schedule")
+        all_assets = db_manager.list_assets()
+        if all_assets:
+            cal_preview = [
+                {
+                    "Asset ID": a["asset_id"],
+                    "Platform": a["platform"].upper(),
+                    "Format": a["format_type"],
+                    "Scheduled Time": a["scheduled_time"],
+                    "Hook": a["hook"][:60] + "..."
+                }
+                for a in all_assets[:6]
+            ]
+            st.dataframe(pd.DataFrame(cal_preview), use_container_width=True)
         else:
-            st.caption("Run quality checks on new inputs to view validation telemetry.")
+            st.info("No scheduled posts yet. Ingest an article and generate assets to build your calendar.")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("### ⚡ System Specifications")
-        st.markdown(f"""
-        - **Python Version:** `3.14.3`
-        - **Rendering Engine:** `imageio-ffmpeg` (v7.1 x86_64) + Pillow
-        - **Database:** SQLite (`data/incubrix.db`)
-        - **Verified Brand Destination:** `https://incubrix.com`
-        - **Assessment Minimums:** $\ge$10 Videos, $\ge$5 Graphics, 30 Total Assets
-        """)
+    with col_right:
+        st.markdown("### 🎬 Creative Output Showcase")
+        all_assets = db_manager.list_assets()
+        video_sample = next((a for a in all_assets if a["format_type"] == "video" and os.path.exists(a["creative_file_path"])), None)
+        carousel_sample = next((a for a in all_assets if a["format_type"] == "carousel" and os.path.exists(a["creative_file_path"])), None)
+
+        if video_sample:
+            st.caption(f"**Latest Short Video:** `{video_sample['asset_id']}` ({video_sample['platform'].upper()})")
+            st.video(video_sample["creative_file_path"])
+        elif carousel_sample:
+            st.caption(f"**Latest Carousel Deck:** `{carousel_sample['asset_id']}`")
+            st.image(carousel_sample["creative_file_path"], use_container_width=True)
+        else:
+            st.caption("Creative media previews will appear here once content is generated.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Collapsible Evaluator & Quality Inspection Panel
+    with st.expander("⚙️ System Telemetry & Quality Assurance (Evaluator Inspection Panel)"):
+        t_col1, t_col2 = st.columns(2)
+        with t_col1:
+            st.markdown("#### Quality Validation Telemetry")
+            if total_assets > 0:
+                pass_count = metrics["by_quality"].get("PASS", 0)
+                warn_count = metrics["by_quality"].get("WARNING", 0)
+                fail_count = metrics["by_quality"].get("FAIL", 0)
+                rate = round((pass_count / total_assets) * 100, 1)
+
+                st.write(f"**Quality Compliance Pass Rate:** `{rate}%` (Assessment Target: >= 85%)")
+                st.progress(min(1.0, rate / 100.0))
+                q1, q2, q3 = st.columns(3)
+                q1.markdown(f'<span class="badge-pass">PASS: {pass_count}</span>', unsafe_allow_html=True)
+                q2.markdown(f'<span class="badge-warn">WARN: {warn_count}</span>', unsafe_allow_html=True)
+                q3.markdown(f'<span class="badge-fail">FAIL: {fail_count}</span>', unsafe_allow_html=True)
+            else:
+                st.caption("No assets to validate yet.")
+
+        with t_col2:
+            st.markdown("#### Engine & Runtime Telemetry")
+            if recent_runs:
+                runs_df = pd.DataFrame(recent_runs)[
+                    ["run_id", "mode", "requested_count", "successful_count", "runtime_seconds", "estimated_ai_cost", "status"]
+                ]
+                runs_df.columns = ["Run ID", "Mode", "Requested", "Success", "Runtime (s)", "Est. AI Cost ($)", "Status"]
+                st.dataframe(runs_df, use_container_width=True)
+            else:
+                st.caption("No recent runs recorded.")
 
 
 # -------------------------------------------------------------
@@ -677,41 +704,42 @@ elif page == "📦 Export & Submissions":
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-        st.markdown("---")
-        st.markdown("### 🔍 Reproducible 20-Asset Random Audit")
-        st.write("Assessment Requirement: Reproducible random audit of 20 assets against all 12 criteria, targeting >= 85% passing score.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.expander("🔬 Assessment Audit: 20-Asset Random Quality Compliance (Evaluator Tool)"):
+            st.markdown("### 🔍 Reproducible 20-Asset Random Audit")
+            st.write("Assessment Requirement: Reproducible random audit of 20 assets against all 12 criteria, targeting >= 85% passing score.")
 
-        seed_input = st.number_input("Random Seed for Audit Reproducibility", value=42, step=1)
-        if st.button("🔬 Execute 20-Asset Random Quality Audit"):
-            audit_result = audit_runner.run_reproducible_audit(
-                assets=all_assets,
-                sample_size=20,
-                random_seed=seed_input,
-                output_csv="output/reports/audit_report.csv"
-            )
+            seed_input = st.number_input("Random Seed for Audit Reproducibility", value=42, step=1)
+            if st.button("🔬 Execute 20-Asset Random Quality Audit"):
+                audit_result = audit_runner.run_reproducible_audit(
+                    assets=all_assets,
+                    sample_size=20,
+                    random_seed=seed_input,
+                    output_csv="output/reports/audit_report.csv"
+                )
 
-            # Persist in DB
-            db_manager.save_audit_log(
-                run_id=all_runs[0]["run_id"] if all_runs else "MANUAL",
-                sample_size=audit_result["sample_size"],
-                pass_count=audit_result["passed_count"],
-                fail_count=audit_result["failed_count"],
-                pass_rate=audit_result["pass_rate_pct"],
-                report_path=audit_result["report_path"]
-            )
+                # Persist in DB
+                db_manager.save_audit_log(
+                    run_id=all_runs[0]["run_id"] if all_runs else "MANUAL",
+                    sample_size=audit_result["sample_size"],
+                    pass_count=audit_result["passed_count"],
+                    fail_count=audit_result["failed_count"],
+                    pass_rate=audit_result["pass_rate_pct"],
+                    report_path=audit_result["report_path"]
+                )
 
-            st.markdown(f"#### Audit Result: `{audit_result['pass_rate_pct']}%` Pass Rate")
-            if audit_result["meets_target"]:
-                st.success(f"✅ EXCEEDS TARGET: {audit_result['passed_count']} of {audit_result['sample_size']} sampled assets passed all mandatory criteria (Target: >=85%).")
-            else:
-                st.error(f"❌ Below target: {audit_result['pass_rate_pct']}% pass rate.")
+                st.markdown(f"#### Audit Result: `{audit_result['pass_rate_pct']}%` Pass Rate")
+                if audit_result["meets_target"]:
+                    st.success(f"✅ EXCEEDS TARGET: {audit_result['passed_count']} of {audit_result['sample_size']} sampled assets passed all mandatory criteria (Target: >=85%).")
+                else:
+                    st.error(f"❌ Below target: {audit_result['pass_rate_pct']}% pass rate.")
 
-            if Path(audit_result["report_path"]).exists():
-                audit_df = pd.read_csv(audit_result["report_path"])
-                st.dataframe(audit_df, use_container_width=True)
+                if Path(audit_result["report_path"]).exists():
+                    audit_df = pd.read_csv(audit_result["report_path"])
+                    st.dataframe(audit_df, use_container_width=True)
 
-                with open(audit_result["report_path"], "rb") as f:
-                    st.download_button("⬇️ Download audit_report.csv", f.read(), "audit_report.csv", "text/csv")
+                    with open(audit_result["report_path"], "rb") as f:
+                        st.download_button("⬇️ Download audit_report.csv", f.read(), "audit_report.csv", "text/csv")
 
 
 # -------------------------------------------------------------
