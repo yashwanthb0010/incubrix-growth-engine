@@ -89,10 +89,11 @@ cp .env.example .env
 ---
 
 ## 4. One Primary Run Command
-To launch the complete application interface:
+To launch the complete application interface in Windows PowerShell / Command Prompt:
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
+*Or double-click / execute [run_app.bat](file:///c:/Users/Yashwanth/OneDrive/Desktop/New%20folder/run_app.bat).*
 Open your browser to `http://localhost:8501`.
 
 ---
