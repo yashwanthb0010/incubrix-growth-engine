@@ -1,0 +1,18 @@
+{
+  "asset_id": "YT_SHORT_004",
+  "format": "video_mp4",
+  "resolution": "1080x1920",
+  "duration_seconds": 5,
+  "fps": 12,
+  "hook": "Why 72% of solo creators burn out\u2014and the 3-step fix.",
+  "storyboard_script": [
+    "Step 1: Anchor your core long-form idea (The 1-to-30 Content Multiplication Framework).",
+    "Step 2: Extract 5 distinct layers\u2014educational posts, slides, and videos.",
+    "Step 3: Verify all factual claims and attach standardized UTM tracking.",
+    "Step 4: Schedule seamlessly across LinkedIn, Instagram, and Shorts."
+  ],
+  "cta": "Streamline your creator workflow at incubrix.com",
+  "destination_url": "https://incubrix.com",
+  "audio_track": "rights_cleared_ambient_soundwave",
+  "render_engine": "FFmpeg"
+}

@@ -1,0 +1,55 @@
+company_name: "IncuBrix Private Limited"
+brand_name: "IncuBrix"
+official_website: "https://incubrix.com"
+verified_destination_url: "https://incubrix.com"
+tagline: "The All-in-One Creator OS & Content Operations Hub"
+mission: "Empowering modern creators and growth teams to transform 1 piece of long-form content into a multi-platform publishing engine."
+
+target_audience:
+  primary: "Solo digital creators, technical founders, and newsletter writers"
+  secondary: "B2B growth marketers and boutique social media agency operators"
+  pain_points:
+    - "Hours spent reformatting long blog posts into vertical video scripts and carousels"
+    - "Inconsistent brand voice across platforms"
+    - "Lack of structured UTM tracking and ROI attribution"
+    - "Creator burnout from multi-channel distribution demands"
+
+brand_voice:
+  tone: "Authoritative, educational, pragmatic, and high-energy"
+  guidelines:
+    - "Lead with actionable hooks; avoid buzzwords and clickbait"
+    - "Every educational claim must have a concrete step or takeaway"
+    - "Never fabricate features, numbers, or testimonials"
+    - "Include specific calls-to-action with verified UTM links"
+
+design_system:
+  colors:
+    primary: "#6366F1"      # Modern Indigo
+    secondary: "#EC4899"    # Vibrant Rose
+    accent: "#38BDF8"       # Cyan / Sky
+    background_dark: "#0F172A" # Deep Slate
+    surface_dark: "#1E293B"    # Slate Card
+    surface_light: "#F8FAFC"
+    text_primary: "#FFFFFF"
+    text_secondary: "#94A3B8"
+    success: "#10B981"
+    warning: "#F59E0B"
+    error: "#EF4444"
+  typography:
+    heading_font: "Helvetica, Arial, sans-serif"
+    body_font: "Helvetica, Arial, sans-serif"
+  video:
+    width: 1080
+    height: 1920
+    fps: 30
+    max_duration_seconds: 60
+  carousel:
+    width: 1080
+    height: 1350
+    aspect_ratio: "4:5"
+
+approved_ctas:
+  - "Explore the Creator OS at incubrix.com"
+  - "Transform your long-form content at incubrix.com"
+  - "Start building your multi-channel engine at incubrix.com"
+  - "Streamline your creator workflow at incubrix.com"

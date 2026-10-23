@@ -1,0 +1,90 @@
+# Platform-Specific Constraints and Configuration
+
+platforms:
+  linkedin:
+    name: "LinkedIn"
+    code: "LI"
+    formats:
+      - id: "li_post"
+        name: "Educational Article Post"
+        asset_prefix: "LI_POST"
+        type: "native_post"
+        max_chars: 3000
+        min_chars: 150
+        recommended_hashtags: [3, 5]
+        default_target_metric: "Engagement Rate (%)"
+        metric_measurement_method: "LinkedIn Page Analytics (Engagements / Impressions * 100)"
+      - id: "li_carousel"
+        name: "Document / Carousel Slide Deck"
+        asset_prefix: "LI_CAROUSEL"
+        type: "carousel"
+        slide_width: 1080
+        slide_height: 1350
+        min_slides: 3
+        max_slides: 10
+        recommended_hashtags: [3, 5]
+        default_target_metric: "Slide Completion & Clicks"
+        metric_measurement_method: "LinkedIn Analytics Document Views & UTM Clicks"
+
+  instagram:
+    name: "Instagram"
+    code: "IG"
+    formats:
+      - id: "ig_reel"
+        name: "Instagram Vertical Reel"
+        asset_prefix: "IG_REEL"
+        type: "video"
+        width: 1080
+        height: 1920
+        aspect_ratio: "9:16"
+        max_duration_seconds: 60
+        recommended_hashtags: [5, 10]
+        default_target_metric: "Reel Plays & Shares"
+        metric_measurement_method: "Instagram Insights Watch Time & Reach"
+      - id: "ig_carousel"
+        name: "Instagram Educational Carousel"
+        asset_prefix: "IG_CAROUSEL"
+        type: "carousel"
+        slide_width: 1080
+        slide_height: 1350
+        aspect_ratio: "4:5"
+        min_slides: 4
+        max_slides: 10
+        recommended_hashtags: [5, 10]
+        default_target_metric: "Saves & Shares"
+        metric_measurement_method: "Instagram Insights Post Saves count"
+      - id: "ig_graphic"
+        name: "Instagram Infographic / Quote Card"
+        asset_prefix: "IG_GRAPHIC"
+        type: "graphic"
+        width: 1080
+        height: 1080
+        aspect_ratio: "1:1"
+        recommended_hashtags: [5, 10]
+        default_target_metric: "Reach & Profile Visits"
+        metric_measurement_method: "Instagram Insights Profile Visits"
+
+  youtube:
+    name: "YouTube Shorts"
+    code: "YT"
+    formats:
+      - id: "yt_short"
+        name: "YouTube Vertical Short"
+        asset_prefix: "YT_SHORT"
+        type: "video"
+        width: 1080
+        height: 1920
+        aspect_ratio: "9:16"
+        max_duration_seconds: 60
+        recommended_hashtags: [2, 4]
+        default_target_metric: "View-Through Rate (%)"
+        metric_measurement_method: "YouTube Studio VTR (Viewed vs Swiped Away)"
+      - id: "yt_community"
+        name: "YouTube Community Poll & Graphic"
+        asset_prefix: "YT_COMMUNITY"
+        type: "graphic"
+        width: 1080
+        height: 1080
+        recommended_hashtags: [1, 3]
+        default_target_metric: "Votes & Comments"
+        metric_measurement_method: "YouTube Studio Community Feed Analytics"

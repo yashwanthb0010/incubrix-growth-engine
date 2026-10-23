@@ -1,0 +1,2 @@
+run_id,input_id,mode,requested_count,successful_count,failed_count,start_time,end_time,runtime_seconds,model_name,retry_count,token_usage,estimated_ai_cost,estimated_render_cost,status
+RUN_20261023_220718,INP_20261023_220718,package_30,30,30,0,2026-10-23T22:07:18.719797,2026-10-23T22:07:37.133130,18.41,demo-deterministic-engine-v1,0,15992,0.0,0.006,COMPLETED

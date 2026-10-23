@@ -1,0 +1,42 @@
+{
+  "asset_id": "IG_CAROUSEL_001",
+  "format": "carousel_png",
+  "slide_count": 6,
+  "dimensions": "1080x1350",
+  "title": "The 1-to-30 Content Matrix: How to Multiply 1",
+  "slides": [
+    {
+      "headline": "The 1-to-30 Content Matrix: How to Multiply 1 Idea into 30 Assets (Slide by Slide)",
+      "body": "Swipe through to master the systematic framework for multiplying content without burning out."
+    },
+    {
+      "headline": "1. The Anchor Node",
+      "body": "Start with one high-depth piece. Example: Core Rules for Effective Asset Repurposing."
+    },
+    {
+      "headline": "2. Layered Extraction",
+      "body": "Extract strategic LinkedIn articles, punchy Shorts scripts, and carousel slides."
+    },
+    {
+      "headline": "3. Platform-Native Hooks",
+      "body": "Never copy-paste identical text. Adapt hooks to each platform's distinct user psychology."
+    },
+    {
+      "headline": "4. Verified Link Tracking",
+      "body": "Track real conversion ROI with rigorous UTM parameters on every post."
+    },
+    {
+      "headline": "5. Put It On Autopilot",
+      "body": "Explore the complete Creator OS at incubrix.com to automate this entire pipeline."
+    }
+  ],
+  "cta": "Explore the Creator OS at incubrix.com",
+  "rendered_files": [
+    "output/assets\\IG_CAROUSEL_001_slide_1.png",
+    "output/assets\\IG_CAROUSEL_001_slide_2.png",
+    "output/assets\\IG_CAROUSEL_001_slide_3.png",
+    "output/assets\\IG_CAROUSEL_001_slide_4.png",
+    "output/assets\\IG_CAROUSEL_001_slide_5.png",
+    "output/assets\\IG_CAROUSEL_001_slide_6.png"
+  ]
+}

@@ -1,0 +1,59 @@
+# IncuBrix Product Claims Registry
+# All claims must be supported by public, verified evidence.
+# Unverified or exaggerated claims will be rejected during automated quality validation.
+
+claims:
+  - id: "CLAIM_001"
+    claim: "IncuBrix is an all-in-one Creator OS and content operations hub."
+    evidence_source: "Official website: incubrix.com landing page meta & headline"
+    verification_status: "VERIFIED"
+    verification_date: "2026-10-23"
+    allowed_wording:
+      - "IncuBrix serves as an all-in-one Creator OS for content operations."
+      - "IncuBrix is designed as a centralized content operations hub."
+    prohibited_wording:
+      - "IncuBrix replaces all human writers completely"
+      - "IncuBrix guarantees 10M views in 24 hours"
+
+  - id: "CLAIM_002"
+    claim: "IncuBrix transforms single-source long-form content into multi-platform digital assets."
+    evidence_source: "Official website: incubrix.com product overview"
+    verification_status: "VERIFIED"
+    verification_date: "2026-10-23"
+    allowed_wording:
+      - "Transforms long-form content into platform-specific social assets."
+      - "Repurpose one core piece into clips, carousels, and captions."
+    prohibited_wording:
+      - "Instant 1-click publishing without review"
+
+  - id: "CLAIM_003"
+    claim: "IncuBrix provides structured pricing tiers including Free, Starter ($29/mo), Creator ($69/mo), Pro ($129/mo), and Business ($249/mo)."
+    evidence_source: "Official website: incubrix.com pricing documentation"
+    verification_status: "VERIFIED"
+    verification_date: "2026-10-23"
+    allowed_wording:
+      - "Flexible pricing starting with a Free tier up to structured creator & business plans."
+      - "Plans tailored for solopreneurs up to scaling business content teams."
+    prohibited_wording:
+      - "Completely free unlimited lifetime tier with no caps"
+
+  - id: "CLAIM_004"
+    claim: "IncuBrix supports multi-platform publishing workflows across LinkedIn, Instagram, and YouTube."
+    evidence_source: "incubrix.com platform capabilities and assessment specifications"
+    verification_status: "VERIFIED"
+    verification_date: "2026-10-23"
+    allowed_wording:
+      - "Optimize output for LinkedIn, Instagram Reels/Carousels, and YouTube Shorts."
+      - "Generate platform-tailored formats and scheduling calendars."
+    prohibited_wording:
+      - "Direct API auto-posting without user authorization"
+
+  - id: "CLAIM_005"
+    claim: "IncuBrix Private Limited is an active incorporated legal entity."
+    evidence_source: "ZaubaCorp / Ministry of Corporate Affairs public registry"
+    verification_status: "VERIFIED"
+    verification_date: "2026-10-23"
+    allowed_wording:
+      - "Developed by IncuBrix Private Limited."
+    prohibited_wording:
+      - "Overnight viral startup backed by unnamed billionaires"
