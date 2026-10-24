@@ -1,7 +1,6 @@
 services:
   incubrix-growth-engine:
     build: .
-    container_name: incubrix-growth-engine
     ports:
       - "8501:8501"
     environment:
