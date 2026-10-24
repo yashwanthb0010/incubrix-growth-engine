@@ -1,0 +1,20 @@
+{
+  "asset_id": "TEST_60S_FIX",
+  "format": "video_mp4",
+  "resolution": "1080x1920",
+  "duration_seconds": 60,
+  "fps": 15,
+  "hook": "Stop spending 18 hours editing your videos.",
+  "storyboard_script": [
+    "Step 1: Anchor your core long-form insight.",
+    "Step 2: Edit video like text in the transcript.",
+    "Step 3: Extract Shorts, Reels, and Carousels.",
+    "Step 4: Style brand karaoke captions with hex colors.",
+    "Step 5: Attach verified UTM tracking links.",
+    "Step 6: Dispatch across YouTube, Instagram, and LinkedIn in 1 click."
+  ],
+  "cta": "Streamline your creator workflow at incubrix.com",
+  "destination_url": "https://incubrix.com",
+  "audio_track": "rights_cleared_ambient_soundwave",
+  "render_engine": "FFmpeg"
+}

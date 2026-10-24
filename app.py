@@ -283,15 +283,24 @@ if page == "📊 Dashboard":
             st.caption(f"**Latest Short Video:** `{video_sample['asset_id']}` ({video_sample['platform'].upper()})")
             st.video(video_sample["creative_file_path"])
         elif carousel_sample:
-            st.caption(f"**Latest Carousel Deck:** `{carousel_sample['asset_id']}`")
-            st.image(carousel_sample["creative_file_path"], use_container_width=True)
+            # Count all slides for this carousel
+            cover = Path(carousel_sample["creative_file_path"])
+            c_slides = sorted(cover.parent.glob(f"{carousel_sample['asset_id']}_slide_*.png"))
+            st.caption(f"**Latest Carousel Deck:** `{carousel_sample['asset_id']}` — {len(c_slides)} slides")
+            st.image(str(c_slides[0]) if c_slides else carousel_sample["creative_file_path"], use_container_width=True)
+            st.info("➡️ Go to **🔍 Asset Review & Editor** to browse all slides with Prev / Next navigation.")
         else:
             st.caption("Creative media previews will appear here once content is generated.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Collapsible Evaluator & Quality Inspection Panel
-    with st.expander("⚙️ System Telemetry & Quality Assurance (Evaluator Inspection Panel)"):
+    # Collapsible Evaluator & Quality Inspection Panel — Hidden by default for normal users
+    with st.expander("🔬 Evaluator / QA Panel — Quality Assurance Telemetry (Assessment Verification Only)", expanded=False):
+        st.info("""
+        **This panel is for IncuBrix Assessment Evaluators only.**  
+        It shows automated quality compliance metrics and engine telemetry to help verify the submission meets all 12 assessment criteria.  
+        Normal creators can safely ignore this section.
+        """)  
         t_col1, t_col2 = st.columns(2)
         with t_col1:
             st.markdown("#### Quality Validation Telemetry")
@@ -451,6 +460,22 @@ elif page == "⚡ Content Generation Engine":
         )
         provider_code = "demo" if "Demo" in provider_choice else ("openai" if "OpenAI" in provider_choice else "anthropic")
 
+    # Video Duration Selector
+    st.markdown("---")
+    vcol1, vcol2 = st.columns([2, 1])
+    with vcol1:
+        video_duration = st.slider(
+            "🎬 Short Video Duration (seconds)",
+            min_value=5,
+            max_value=60,
+            value=15,
+            step=5,
+            help="Choose how long each generated Short / Reel video will be. The assessment allows up to 60 seconds."
+        )
+    with vcol2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.info(f"**{video_duration}s** per video  \n(Max allowed: 60s)")
+
     start_btn = st.button("🚀 Execute Content Engine & Render Media")
 
     if start_btn:
@@ -501,7 +526,8 @@ elif page == "⚡ Content Generation Engine":
                 mode=selected_mode,
                 platforms=st.session_state.get("target_platforms", ["linkedin", "instagram", "youtube"]),
                 existing_texts=existing_texts,
-                progress_callback=update_progress
+                progress_callback=update_progress,
+                video_duration_seconds=video_duration
             )
 
             # Validate each asset and persist
@@ -588,14 +614,109 @@ elif page == "🔍 Asset Review & Editor":
                 st.caption(f"Platform: **{asset['platform'].upper()}** | Format: **{asset['format_type']}** | Pillar: **{asset['content_pillar']}**")
 
                 creative_path = asset["creative_file_path"]
-                if os.path.exists(creative_path):
-                    if creative_path.lower().endswith(".mp4"):
+
+                # -------------------------------------------------------
+                # CAROUSEL: interactive slide viewer with Prev / Next nav
+                # -------------------------------------------------------
+                if asset["format_type"] == "carousel":
+                    # Discover all slides for this asset (slide_1, slide_2, ...)
+                    cover = Path(creative_path)
+                    slide_dir = cover.parent
+                    # Pattern: <asset_id>_slide_N.png
+                    slide_files = sorted(
+                        slide_dir.glob(f"{asset['asset_id']}_slide_*.png"),
+                        key=lambda p: int(p.stem.rsplit('_', 1)[-1])
+                    )
+
+                    if not slide_files:
+                        # Fallback if naming differs
+                        slide_files = [cover] if cover.exists() else []
+
+                    total_slides = len(slide_files)
+
+                    if total_slides > 0:
+                        # Session-state key per asset to remember current slide
+                        slide_key = f"slide_idx_{asset['asset_id']}"
+                        if slide_key not in st.session_state:
+                            st.session_state[slide_key] = 0
+
+                        cur = st.session_state[slide_key]
+
+                        # Navigation row: Prev | Slide N of Total | Next
+                        nav_l, nav_mid, nav_r = st.columns([1, 2, 1])
+                        with nav_l:
+                            if st.button("◀ Prev", key=f"prev_{asset['asset_id']}", disabled=(cur == 0)):
+                                st.session_state[slide_key] = cur - 1
+                                st.rerun()
+                        with nav_mid:
+                            st.markdown(
+                                f"<div style='text-align:center;font-weight:700;color:#6366F1;padding-top:8px'>Slide {cur+1} / {total_slides}</div>",
+                                unsafe_allow_html=True
+                            )
+                        with nav_r:
+                            if st.button("Next ▶", key=f"next_{asset['asset_id']}", disabled=(cur == total_slides - 1)):
+                                st.session_state[slide_key] = cur + 1
+                                st.rerun()
+
+                        # Main slide display
+                        st.image(str(slide_files[cur]), use_container_width=True)
+
+                        # Thumbnail strip (click to jump)
+                        if total_slides > 1:
+                            st.caption("📸 Slide thumbnails — click a slide number to jump:")
+                            thumb_cols = st.columns(min(total_slides, 6))
+                            for ti, sf in enumerate(slide_files):
+                                with thumb_cols[ti % 6]:
+                                    border_color = "#6366F1" if ti == cur else "#1E293B"
+                                    st.markdown(
+                                        f"<div style='border:2px solid {border_color};border-radius:6px;text-align:center;padding:2px;margin-bottom:4px;'>"
+                                        f"<span style='font-size:0.75rem;color:#94A3B8'>Slide {ti+1}</span></div>",
+                                        unsafe_allow_html=True
+                                    )
+                                    if st.button(f"{ti+1}", key=f"thumb_{asset['asset_id']}_{ti}"):
+                                        st.session_state[slide_key] = ti
+                                        st.rerun()
+
+                        # Per-slide download
+                        with open(str(slide_files[cur]), "rb") as f:
+                            st.download_button(
+                                label=f"⬇️ Download Slide {cur+1} PNG",
+                                data=f.read(),
+                                file_name=slide_files[cur].name,
+                                mime="image/png"
+                            )
+                    else:
+                        st.warning("No carousel slide files found.")
+
+                # -------------------------------------------------------
+                # VIDEO
+                # -------------------------------------------------------
+                elif creative_path.lower().endswith(".mp4"):
+                    if os.path.exists(creative_path):
                         st.video(creative_path)
-                    elif creative_path.lower().endswith(".png") or creative_path.lower().endswith(".jpg"):
+                    else:
+                        st.warning(f"Video file not found: {creative_path}")
+
+                # -------------------------------------------------------
+                # GRAPHIC / SINGLE IMAGE
+                # -------------------------------------------------------
+                elif creative_path.lower().endswith(".png") or creative_path.lower().endswith(".jpg"):
+                    if os.path.exists(creative_path):
                         st.image(creative_path, use_container_width=True)
+                        with open(creative_path, "rb") as f:
+                            st.download_button(
+                                label="⬇️ Download Image PNG",
+                                data=f.read(),
+                                file_name=os.path.basename(creative_path),
+                                mime="image/png"
+                            )
+                    else:
+                        st.warning(f"Image file not found: {creative_path}")
+
                 else:
                     st.warning(f"Creative file not found at {creative_path}")
 
+                # Editable source download
                 st.markdown(f"**Editable Source File:** `{asset['editable_source_path']}`")
                 if os.path.exists(asset["editable_source_path"]):
                     with open(asset["editable_source_path"], "r", encoding="utf-8") as f:
@@ -705,7 +826,12 @@ elif page == "📦 Export & Submissions":
                 )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("🔬 Assessment Audit: 20-Asset Random Quality Compliance (Evaluator Tool)"):
+        with st.expander("🔬 Assessment Evaluator Tool — 20-Asset Random Quality Audit (Assessment Verification Only)", expanded=False):
+            st.info("""
+            **For IncuBrix Assessment Evaluators only.**  
+            This tool runs a reproducible random audit of 20 sampled assets against all 12 quality criteria, targeting a ≥85% pass rate.  
+            Normal users don't need to interact with this panel.
+            """)
             st.markdown("### 🔍 Reproducible 20-Asset Random Audit")
             st.write("Assessment Requirement: Reproducible random audit of 20 assets against all 12 criteria, targeting >= 85% passing score.")
 

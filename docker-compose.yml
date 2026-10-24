@@ -1,0 +1,13 @@
+services:
+  incubrix-growth-engine:
+    build: .
+    container_name: incubrix-growth-engine
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./output:/app/output
+      - ./data:/app/data
+      - ./submission:/app/submission
+    restart: unless-stopped

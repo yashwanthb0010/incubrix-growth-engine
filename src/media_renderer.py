@@ -136,6 +136,14 @@ def render_short_video(
     width, height = 1080, 1920
     total_frames = duration_seconds * fps
 
+    # Dynamic proportional phase timing (scales smoothly from 5s to 60s without content repeating)
+    hook_duration = min(7.0, max(2.0, duration_seconds * 0.15))
+    cta_duration = min(6.0, max(2.0, duration_seconds * 0.12))
+    breakdown_duration = max(1.0, duration_seconds - hook_duration - cta_duration)
+
+    num_steps = len(script_lines) if script_lines else 1
+    step_duration = breakdown_duration / num_steps
+
     # Fonts
     font_hook = get_bold_font(54)
     font_body = get_default_font(38)
@@ -191,11 +199,11 @@ def render_short_video(
             draw.rectangle([0, 0, width, 12], fill=BRAND_SURFACE)
             draw.rectangle([0, 0, bar_w, 12], fill=BRAND_SECONDARY)
 
-            # Central Content Switching by Timeline
-            # Phase 1: 0 - 2.5s (Hook)
-            # Phase 2: 2.5s - (duration - 2s) (Actionable steps)
-            # Phase 3: Last 2s (CTA & Verified Link)
-            if current_time < 2.5:
+            # Central Content Switching by Timeline (Proportional Pacing -- ZERO REPETITION)
+            # Phase 1: 0 to hook_duration (Hook)
+            # Phase 2: hook_duration to (duration - cta_duration) (Step-by-step progressive breakdown)
+            # Phase 3: (duration - cta_duration) to end (CTA & Verified Link)
+            if current_time < hook_duration:
                 # Hook Phase
                 draw.rounded_rectangle([70, 320, width - 70, 720], radius=24, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
                 draw.text((110, 360), "[ STOP WASTING 18 HOURS/WEEK ]", font=font_small, fill=BRAND_ACCENT)
@@ -205,20 +213,29 @@ def render_short_video(
                 pulse = int(math.sin(frame_idx * 0.4) * 15)
                 draw.ellipse([540 - 20 + pulse, 850, 540 + 20 + pulse, 890], fill=BRAND_SECONDARY)
 
-            elif current_time < (duration_seconds - 2.0):
-                # Script Breakdown Phase
-                step_idx = int((current_time - 2.5) / 1.5) % len(script_lines) if script_lines else 0
+            elif current_time < (duration_seconds - cta_duration):
+                # Progressive Script Breakdown Phase (NO MODULO REPETITION)
+                step_idx = min(num_steps - 1, max(0, int((current_time - hook_duration) / step_duration)))
                 step_text = script_lines[step_idx] if script_lines else "Multiply your content into 30 native assets."
 
+                # Progress within the current step
+                step_elapsed = current_time - hook_duration - (step_idx * step_duration)
+                step_pct = min(1.0, max(0.0, step_elapsed / step_duration))
+
                 draw.rounded_rectangle([70, 300, width - 70, 850], radius=24, fill=BRAND_SURFACE, outline=BRAND_ACCENT, width=2)
-                draw.text((110, 340), f"OPERATIONAL FRAMEWORK #{step_idx + 1}", font=font_small, fill=BRAND_SECONDARY)
+                draw.text((110, 340), f"OPERATIONAL FRAMEWORK -- STEP {step_idx + 1} OF {num_steps}", font=font_small, fill=BRAND_SECONDARY)
                 draw_wrapped_text(draw, step_text, 110, 410, width - 220, font_body, TEXT_PRIMARY, line_spacing=16)
+
+                # Step sub-progress bar inside card
+                card_w = width - 220
+                draw.rectangle([110, 700, 110 + card_w, 708], fill=BRAND_SURFACE)
+                draw.rectangle([110, 700, 110 + int(card_w * step_pct), 708], fill=BRAND_ACCENT)
 
                 # Animated Sound Waveform Bars
                 base_x = 220
                 for bar_i in range(16):
                     wave_h = max(8, int(35 + 28 * math.sin(frame_idx * 0.5 + bar_i * 0.6)))
-                    draw.rectangle([base_x + bar_i * 40, 760 - wave_h, base_x + bar_i * 40 + 18, 760], fill=BRAND_ACCENT)
+                    draw.rectangle([base_x + bar_i * 40, 780 - wave_h, base_x + bar_i * 40 + 18, 780], fill=BRAND_ACCENT)
 
             else:
                 # CTA & Destination Phase

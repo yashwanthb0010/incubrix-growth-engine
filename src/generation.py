@@ -75,33 +75,24 @@ class ContentGenerator:
         platforms: Optional[List[str]] = None,
         existing_texts: Optional[List[str]] = None,
         start_date: Optional[datetime] = None,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[callable] = None,
+        video_duration_seconds: int = 15
     ) -> Tuple[List[GeneratedAsset], int, int]:
         """
-        Generates full asset suite according to mode:
-        - min_10: 10 distinct assets across platforms
-        - package_30: 30 publication-ready assets satisfying:
-            * >= 10 vertical short videos (MP4)
-            * >= 5 educational carousels or graphics (PNG)
-            * >= 15 platform-native text/article posts
-            * Distributed across LinkedIn, Instagram, and YouTube Shorts.
+        Generates full asset suite according to mode.
+        video_duration_seconds: length for each MP4 Short video (5–60s, default 15s).
         Returns: (assets_list, retry_count, token_count)
         """
         if platforms is None:
             platforms = ["linkedin", "instagram", "youtube"]
 
+        # Clamp duration to allowed range
+        video_duration_seconds = max(5, min(60, video_duration_seconds))
+
         target_total = 30 if mode == "package_30" else 10
         start_dt = start_date or (datetime.now() + timedelta(days=1))
         existing_text_pool = list(existing_texts or [])
 
-        # Distribution Plan for 30 assets:
-        # YouTube: 5 Shorts (video), 5 Community Posts (graphic/text) = 10
-        # Instagram: 6 Reels (video), 4 Carousels (PNG), 2 Single Graphics = 12
-        # LinkedIn: 4 Carousels (PNG), 4 Long-form Articles (text) = 8
-        # Total Videos: 5 (YT) + 6 (IG) = 11 (satisfies >= 10 requirement!)
-        # Total Carousels/Graphics: 5 (YT/IG graphics) + 8 (Carousels) = 13 (satisfies >= 5 requirement!)
-        # Total Native/Written: 6 (satisfies >= 15 additional useful assets!)
-        
         spec_list = self._plan_distribution(target_total, platforms)
         generated_assets: List[GeneratedAsset] = []
         retry_count = 0
@@ -116,7 +107,8 @@ class ContentGenerator:
                 run_id=run_id,
                 spec=spec,
                 scheduled_dt=start_dt + timedelta(hours=idx * 16),
-                existing_texts=existing_text_pool
+                existing_texts=existing_text_pool,
+                video_duration_seconds=video_duration_seconds
             )
             retry_count += retries
             token_count += tokens
@@ -209,14 +201,18 @@ class ContentGenerator:
         spec: Dict[str, Any],
         scheduled_dt: datetime,
         existing_texts: List[str],
-        max_retries: int = 3
+        max_retries: int = 3,
+        video_duration_seconds: int = 15
     ) -> Tuple[GeneratedAsset, int, int]:
         retries = 0
         last_error = None
 
         while retries <= max_retries:
             try:
-                asset, tokens = self._generate_asset_payload(doc, run_id, spec, scheduled_dt, existing_texts)
+                asset, tokens = self._generate_asset_payload(
+                    doc, run_id, spec, scheduled_dt, existing_texts,
+                    video_duration_seconds=video_duration_seconds
+                )
                 return asset, retries, tokens
             except Exception as e:
                 retries += 1
@@ -231,7 +227,8 @@ class ContentGenerator:
         run_id: str,
         spec: Dict[str, Any],
         scheduled_dt: datetime,
-        existing_texts: List[str]
+        existing_texts: List[str],
+        video_duration_seconds: int = 15
     ) -> Tuple[GeneratedAsset, int]:
         platform = spec["platform"]
         fmt_type = spec["format_type"]
@@ -280,7 +277,8 @@ class ContentGenerator:
             hook=hook,
             caption=caption,
             cta=cta,
-            slides_or_script=slides_or_script
+            slides_or_script=slides_or_script,
+            video_duration_seconds=video_duration_seconds
         )
 
         content_hash = calculate_content_hash(f"{hook} {caption}")
@@ -342,10 +340,12 @@ class ContentGenerator:
             ]
             hook = hooks_templates[(index - 1) % len(hooks_templates)]
             script_lines = [
-                f"Step 1: Anchor your core long-form idea ({idea_snippet[:45]}).",
-                "Step 2: Extract 5 distinct layers—educational posts, slides, and videos.",
-                "Step 3: Verify all factual claims and attach standardized UTM tracking.",
-                "Step 4: Schedule seamlessly across LinkedIn, Instagram, and Shorts."
+                f"Step 1: Anchor your core insight ({idea_snippet[:40]}).",
+                "Step 2: Edit video like text -- delete transcript words to prune video frames.",
+                "Step 3: Extract 5 native layers: Shorts, Reels, Carousels, and LinkedIn teardowns.",
+                "Step 4: Auto-sync brand kit typography, hex colors, and karaoke captions.",
+                "Step 5: Attach verified UTM campaign tracking links for exact sign-up ROI.",
+                "Step 6: Schedule and dispatch natively to YouTube, Instagram, and LinkedIn in 1 click."
             ]
             caption = (
                 f"{hook}\n\n"
@@ -442,22 +442,26 @@ class ContentGenerator:
         hook: str,
         caption: str,
         cta: str,
-        slides_or_script: Any
+        slides_or_script: Any,
+        video_duration_seconds: int = 15
     ) -> Tuple[str, str]:
         """Executes actual media generation and saves editable source definition."""
         if fmt_type == "video":
             script_lines = slides_or_script if isinstance(slides_or_script, list) else [
                 "Step 1: Anchor your core long-form idea.",
-                "Step 2: Extract educational posts and carousels.",
-                "Step 3: Attach verified UTM tracking links."
+                "Step 2: Edit video like text directly in the transcript.",
+                "Step 3: Extract educational posts, slides, and vertical videos.",
+                "Step 4: Style brand karaoke captions with custom typography.",
+                "Step 5: Attach verified UTM tracking links.",
+                "Step 6: Dispatch across YouTube, Instagram, and LinkedIn."
             ]
             return render_short_video(
                 asset_id=asset_id,
                 hook=hook,
                 script_lines=script_lines,
                 cta=cta,
-                duration_seconds=5,
-                fps=12
+                duration_seconds=video_duration_seconds,
+                fps=15
             )
         elif fmt_type == "carousel":
             slides = slides_or_script if isinstance(slides_or_script, list) else [
