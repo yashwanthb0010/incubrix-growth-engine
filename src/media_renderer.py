@@ -68,14 +68,16 @@ def get_bold_font(size: int = 44) -> ImageFont.ImageFont:
 
 
 def draw_header_badge(draw: ImageDraw.ImageDraw, text: str = "INCUBRIX CREATOR OS", width: int = 1080):
-    badge_w = 460
-    badge_h = 60
+    badge_w = 600
+    badge_h = 80
     x0 = (width - badge_w) // 2
-    y0 = 80
-    # Rounded badge box
-    draw.rounded_rectangle([x0, y0, x0 + badge_w, y0 + badge_h], radius=30, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=2)
-    font_badge = get_bold_font(26)
-    draw.text((x0 + 40, y0 + 16), text, font=font_badge, fill=BRAND_ACCENT)
+    y0 = 85
+    draw.rounded_rectangle([x0, y0, x0 + badge_w, y0 + badge_h], radius=40, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
+    font_badge = get_bold_font(34)
+    bbox = draw.textbbox((0, 0), text, font=font_badge)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+    draw.text((x0 + (badge_w - tw) // 2, y0 + (badge_h - th) // 2 - 2), text, font=font_badge, fill=BRAND_ACCENT)
 
 
 def draw_wrapped_text(
@@ -144,11 +146,17 @@ def render_short_video(
     num_steps = len(script_lines) if script_lines else 1
     step_duration = breakdown_duration / num_steps
 
-    # Fonts
-    font_hook = get_bold_font(54)
-    font_body = get_default_font(38)
-    font_cta = get_bold_font(40)
+    # Proportional Typography tailored for 1080x1920 (9:16 Vertical)
+    font_hook = get_bold_font(62)
+    font_body = get_bold_font(56)
+    font_cta = get_bold_font(56)
+    font_pill = get_bold_font(32)
+    font_medium = get_bold_font(34)
     font_small = get_default_font(28)
+
+    # 9:16 Vertical Card Dimensions (fills vertical space proportionally)
+    card_x0, card_x1 = 60, width - 60
+    card_y0, card_y1 = 230, 1560
 
     # Use FFmpeg pipe if available, else OpenCV VideoWriter
     use_ffmpeg = FFMPEG_EXE is not None and os.path.exists(FFMPEG_EXE)
@@ -187,17 +195,17 @@ def render_short_video(
             draw = ImageDraw.Draw(img)
 
             # Draw ambient top gradient
-            for y_grad in range(0, 400):
-                alpha = int(60 * (1 - y_grad / 400))
-                draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2))
+            for y_grad in range(0, 500):
+                alpha = int(70 * (1 - y_grad / 500))
+                draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2 + alpha))
 
             # Header Badge
             draw_header_badge(draw, text="INCUBRIX SHORTS ENGINE", width=width)
 
             # Progress Bar at Top
             bar_w = int(width * progress)
-            draw.rectangle([0, 0, width, 12], fill=BRAND_SURFACE)
-            draw.rectangle([0, 0, bar_w, 12], fill=BRAND_SECONDARY)
+            draw.rectangle([0, 0, width, 16], fill=BRAND_SURFACE)
+            draw.rectangle([0, 0, bar_w, 16], fill=BRAND_SECONDARY)
 
             # Central Content Switching by Timeline (Proportional Pacing -- ZERO REPETITION)
             # Phase 1: 0 to hook_duration (Hook)
@@ -205,13 +213,29 @@ def render_short_video(
             # Phase 3: (duration - cta_duration) to end (CTA & Verified Link)
             if current_time < hook_duration:
                 # Hook Phase
-                draw.rounded_rectangle([70, 320, width - 70, 720], radius=24, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
-                draw.text((110, 360), "[ STOP WASTING 18 HOURS/WEEK ]", font=font_small, fill=BRAND_ACCENT)
-                draw_wrapped_text(draw, f'"{hook}"', 110, 420, width - 220, font_hook, TEXT_PRIMARY, line_spacing=18)
+                draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
                 
-                # Visual Indicator: Hook highlight pulse
-                pulse = int(math.sin(frame_idx * 0.4) * 15)
-                draw.ellipse([540 - 20 + pulse, 850, 540 + 20 + pulse, 890], fill=BRAND_SECONDARY)
+                # Eyebrow pill (dynamic width)
+                eyebrow_text = "[ STOP WASTING 18 HOURS/WEEK ]"
+                bbox_eb = draw.textbbox((0, 0), eyebrow_text, font=font_pill)
+                pill_w = (bbox_eb[2] - bbox_eb[0]) + 64
+                draw.rounded_rectangle([100, 280, 100 + pill_w, 344], radius=32, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+                draw.text((132, 296), eyebrow_text, font=font_pill, fill=BRAND_SECONDARY)
+
+                # Hook text (Large, bold, high contrast)
+                draw_wrapped_text(draw, f'"{hook}"', 110, 410, width - 220, font_hook, TEXT_PRIMARY, line_spacing=26)
+                
+                # Visual Indicator: Pulsing concentric radar rings
+                cx, cy = 540, 1000
+                pulse = int(math.sin(frame_idx * 0.4) * 16)
+                for r_ring, col in [(180 + pulse, (30, 41, 59)), (130 + pulse // 2, (51, 65, 85)), (80, BRAND_PRIMARY), (30, BRAND_SECONDARY)]:
+                    draw.ellipse([cx - r_ring, cy - r_ring, cx + r_ring, cy + r_ring], outline=col, width=4)
+
+                draw.text((cx - 240, 1210), "INITIALIZING VIRAL RETENTION HOOK", font=font_pill, fill=BRAND_ACCENT)
+
+                # Bottom takeaway pill
+                draw.rounded_rectangle([110, 1360, width - 110, 1480], radius=24, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=2)
+                draw.text((140, 1400), ">> Turn 1 Long Video Into a Week of Native Posts", font=font_medium, fill=BRAND_SECONDARY)
 
             elif current_time < (duration_seconds - cta_duration):
                 # Progressive Script Breakdown Phase (NO MODULO REPETITION)
@@ -222,34 +246,74 @@ def render_short_video(
                 step_elapsed = current_time - hook_duration - (step_idx * step_duration)
                 step_pct = min(1.0, max(0.0, step_elapsed / step_duration))
 
-                draw.rounded_rectangle([70, 300, width - 70, 850], radius=24, fill=BRAND_SURFACE, outline=BRAND_ACCENT, width=2)
-                draw.text((110, 340), f"OPERATIONAL FRAMEWORK -- STEP {step_idx + 1} OF {num_steps}", font=font_small, fill=BRAND_SECONDARY)
-                draw_wrapped_text(draw, step_text, 110, 410, width - 220, font_body, TEXT_PRIMARY, line_spacing=16)
+                draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_ACCENT, width=3)
+                
+                # Step Pill (dynamic width)
+                step_pill_txt = f"STEP {step_idx + 1} OF {num_steps}"
+                bbox_sp = draw.textbbox((0, 0), step_pill_txt, font=font_pill)
+                pill_w = (bbox_sp[2] - bbox_sp[0]) + 64
+                draw.rounded_rectangle([100, 280, 100 + pill_w, 344], radius=32, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+                draw.text((132, 296), step_pill_txt, font=font_pill, fill=BRAND_SECONDARY)
+                draw.text((100 + pill_w + 24, 298), "* CONTENT REPURPOSING FRAMEWORK", font=font_small, fill=BRAND_ACCENT)
+
+                # Main Step Body (Large, readable font auto-scaled to text length)
+                chosen_body_font = get_bold_font(50) if len(step_text) > 110 else font_body
+                draw_wrapped_text(draw, step_text, 110, 410, width - 220, chosen_body_font, TEXT_PRIMARY, line_spacing=26)
+
+                # Animated Sound Waveform Bars in center
+                base_x = 120
+                for bar_i in range(20):
+                    wave_h = max(18, int(45 + 50 * math.sin(frame_idx * 0.5 + bar_i * 0.45)))
+                    bx = base_x + bar_i * 42
+                    draw.rounded_rectangle([bx, 1060 - wave_h, bx + 24, 1060], radius=8, fill=BRAND_ACCENT if bar_i % 2 == 0 else BRAND_SECONDARY)
 
                 # Step sub-progress bar inside card
-                card_w = width - 220
-                draw.rectangle([110, 700, 110 + card_w, 708], fill=BRAND_SURFACE)
-                draw.rectangle([110, 700, 110 + int(card_w * step_pct), 708], fill=BRAND_ACCENT)
+                bar_inner_w = width - 220
+                draw.rounded_rectangle([110, 1150, width - 110, 1172], radius=11, fill=(15, 23, 42))
+                draw.rounded_rectangle([110, 1150, 110 + int(bar_inner_w * step_pct), 1172], radius=11, fill=BRAND_ACCENT)
+                pct_txt = f"Step {step_idx + 1} of {num_steps}  •  {int(step_pct * 100)}% active"
+                draw.text((110, 1195), pct_txt, font=font_pill, fill=TEXT_MUTED)
 
-                # Animated Sound Waveform Bars
-                base_x = 220
-                for bar_i in range(16):
-                    wave_h = max(8, int(35 + 28 * math.sin(frame_idx * 0.5 + bar_i * 0.6)))
-                    draw.rectangle([base_x + bar_i * 40, 780 - wave_h, base_x + bar_i * 40 + 18, 780], fill=BRAND_ACCENT)
+                # Bottom feature badge inside card
+                draw.rounded_rectangle([110, 1360, width - 110, 1480], radius=24, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=2)
+                draw.text((150, 1400), ">> Verified 1-Click Multi-Channel Auto Dispatch", font=font_medium, fill=BRAND_ACCENT)
 
             else:
                 # CTA & Destination Phase
-                draw.rounded_rectangle([70, 350, width - 70, 850], radius=24, fill=BRAND_SURFACE, outline=BRAND_SUCCESS, width=3)
-                draw.text((110, 400), "OFFICIAL VERIFIED DESTINATION", font=font_small, fill=BRAND_SUCCESS)
-                draw_wrapped_text(draw, cta, 110, 470, width - 220, font_cta, TEXT_PRIMARY, line_spacing=16)
+                draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_SUCCESS, width=3)
                 
-                # Verified URL Badge
-                draw.rounded_rectangle([110, 680, width - 110, 780], radius=20, fill=BRAND_PRIMARY)
-                draw.text((220, 710), "VISIT: incubrix.com", font=font_cta, fill=TEXT_PRIMARY)
+                cta_badge_txt = "OFFICIAL VERIFIED DESTINATION"
+                bbox_cb = draw.textbbox((0, 0), cta_badge_txt, font=font_pill)
+                pill_w = (bbox_cb[2] - bbox_cb[0]) + 64
+                draw.rounded_rectangle([100, 280, 100 + pill_w, 344], radius=32, fill=(15, 23, 42), outline=BRAND_SUCCESS, width=2)
+                draw.text((132, 296), cta_badge_txt, font=font_pill, fill=BRAND_SUCCESS)
 
-            # Footer Metadata
-            draw.text((70, height - 120), "#CreatorOS #ContentRepurposing #GrowthEngine", font=font_small, fill=TEXT_MUTED)
-            draw.text((70, height - 70), "Generated with verified IncuBrix AI Content Engine | All rights cleared", font=get_default_font(22), fill=TEXT_MUTED)
+                # Main CTA Text
+                draw_wrapped_text(draw, cta, 110, 410, width - 220, font_cta, TEXT_PRIMARY, line_spacing=26)
+                
+                # Giant Verified Button
+                btn_y0, btn_y1 = 860, 1080
+                draw.rounded_rectangle([110, btn_y0, width - 110, btn_y1], radius=36, fill=(79, 70, 229), outline=(129, 140, 248), width=3)
+                btn_txt = "VISIT: incubrix.com  ->"
+                bbox_btn = draw.textbbox((0, 0), btn_txt, font=get_bold_font(60))
+                bw = bbox_btn[2] - bbox_btn[0]
+                draw.text((110 + (width - 220 - bw) // 2, btn_y0 + 38), btn_txt, font=get_bold_font(60), fill=TEXT_PRIMARY)
+                sub_btn = "Start Posting With Zero Extra Effort Today"
+                bbox_sb = draw.textbbox((0, 0), sub_btn, font=font_pill)
+                sw = bbox_sb[2] - bbox_sb[0]
+                draw.text((110 + (width - 220 - sw) // 2, btn_y0 + 125), sub_btn, font=font_pill, fill=(224, 231, 255))
+
+                # Guarantee badge
+                draw.rounded_rectangle([110, 1150, width - 110, 1260], radius=24, fill=(15, 23, 42), outline=BRAND_SUCCESS, width=2)
+                draw.text((150, 1188), "[PASS] Turnkey Monday Launch Kit Included", font=font_medium, fill=BRAND_SUCCESS)
+
+                # Bottom badge
+                draw.rounded_rectangle([110, 1360, width - 110, 1480], radius=24, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=2)
+                draw.text((150, 1400), ">> Automated Daily Content Repurposing Engine", font=font_medium, fill=BRAND_ACCENT)
+
+            # Footer Metadata (Safe-zone at bottom of 1080x1920)
+            draw.text((70, 1680), "#CreatorOS  #ContentRepurposing  #GrowthEngine", font=font_medium, fill=TEXT_MUTED)
+            draw.text((70, 1750), "IncuBrix AI Social Growth Engine | 1080x1920 (9:16 Vertical)", font=font_small, fill=TEXT_MUTED)
 
             # Write Frame
             if pipe:

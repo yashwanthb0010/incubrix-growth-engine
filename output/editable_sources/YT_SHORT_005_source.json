@@ -2,18 +2,18 @@
   "asset_id": "YT_SHORT_005",
   "format": "video_mp4",
   "resolution": "1080x1920",
-  "duration_seconds": 15,
+  "duration_seconds": 60,
   "fps": 15,
   "hook": "How to build a content operations engine without hiring an army.",
   "storyboard_script": [
-    "Step 1: Anchor your core insight (Core Rules for Effective Asset Repurposi).",
+    "Step 1: Anchor your core insight (Core Rules for Effective Asset Repurposing).",
     "Step 2: Edit video like text -- delete transcript words to prune video frames.",
     "Step 3: Extract 5 native layers: Shorts, Reels, Carousels, and LinkedIn teardowns.",
-    "Step 4: Auto-sync brand kit typography, hex colors, and karaoke captions.",
-    "Step 5: Attach verified UTM campaign tracking links for exact sign-up ROI.",
-    "Step 6: Schedule and dispatch natively to YouTube, Instagram, and LinkedIn in 1 click."
+    "Step 4: Enforce strict brand kit styling, contrast rules, and kinetic captions.",
+    "Step 5: Schedule and dispatch natively to YouTube, Instagram, and LinkedIn in 1 click.",
+    "Step 6: Track view retention and refine viral hooks weekly with real telemetry."
   ],
-  "cta": "Streamline your creator workflow at incubrix.com",
+  "cta": "Ready to automate your social pipeline? Get the IncuBrix Launch Kit today.",
   "destination_url": "https://incubrix.com",
   "audio_track": "rights_cleared_ambient_soundwave",
   "render_engine": "FFmpeg"
