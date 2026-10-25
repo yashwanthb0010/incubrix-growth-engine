@@ -362,15 +362,16 @@ def render_carousel(
 ) -> Tuple[str, str]:
     """
     Renders multi-slide carousel images (1080x1350, 4:5 vertical).
-    Produces individual slide PNGs and returns the primary cover slide path.
+    Produces individual slide PNGs with bold, proportional typography.
     """
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     width, height = 1080, 1350
     primary_cover_path = os.path.join(output_dir, f"{asset_id}_slide_1.png")
 
-    font_title = get_bold_font(52)
-    font_slide_header = get_bold_font(44)
-    font_body = get_default_font(34)
+    font_slide_header = get_bold_font(58)
+    font_body_large = get_bold_font(46)
+    font_body_regular = get_default_font(40)
+    font_pill = get_bold_font(30)
     font_small = get_default_font(26)
 
     rendered_slides_paths = []
@@ -379,35 +380,62 @@ def render_carousel(
         img = Image.new("RGB", (width, height), BRAND_DARK_BG)
         draw = ImageDraw.Draw(img)
 
-        # Header Badge
-        draw_header_badge(draw, text="INCUBRIX CAROUSEL MASTERCLASS", width=width)
+        # Ambient Top Gradient
+        for y_grad in range(0, 400):
+            alpha = int(60 * (1 - y_grad / 400))
+            draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2 + alpha))
 
-        # Slide Number Indicator
+        # Header Pill (Left)
+        draw.rounded_rectangle([60, 85, 540, 165], radius=40, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
+        draw.text((100, 108), "INCUBRIX MASTERCLASS", font=get_bold_font(32), fill=BRAND_ACCENT)
+
+        # Slide Number Indicator Pill (Right)
         slide_num_str = f"SLIDE {i} OF {len(slides)}"
-        draw.text((width - 240, 95), slide_num_str, font=font_small, fill=BRAND_ACCENT)
+        bbox_sn = draw.textbbox((0, 0), slide_num_str, font=font_pill)
+        sn_w = (bbox_sn[2] - bbox_sn[0]) + 48
+        draw.rounded_rectangle([width - sn_w - 60, 85, width - 60, 165], radius=40, fill=(15, 23, 42), outline=BRAND_ACCENT, width=2)
+        draw.text((width - sn_w - 60 + 24, 108), slide_num_str, font=font_pill, fill=BRAND_ACCENT)
 
-        # Content Card
-        draw.rounded_rectangle([70, 200, width - 70, height - 200], radius=28, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=2)
+        # Main Content Card (1080x1350 proportional layout)
+        card_x0, card_x1 = 60, width - 60
+        card_y0, card_y1 = 190, height - 150
+        draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=32, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
 
         slide_headline = slide.get("headline", title if i == 1 else f"Step {i}")
         slide_body = slide.get("body", "")
 
-        draw.text((120, 260), f"INSIGHT #{i}", font=font_small, fill=BRAND_SECONDARY)
-        next_y = draw_wrapped_text(draw, slide_headline, 120, 320, width - 240, font_slide_header, TEXT_PRIMARY, line_spacing=14)
+        # Eyebrow Pill
+        pill_text = f"INSIGHT #{i}  *  CORE FRAMEWORK"
+        bbox_p = draw.textbbox((0, 0), pill_text, font=font_pill)
+        pill_w = (bbox_p[2] - bbox_p[0]) + 56
+        draw.rounded_rectangle([100, 230, 100 + pill_w, 290], radius=30, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+        draw.text((128, 244), pill_text, font=font_pill, fill=BRAND_SECONDARY)
 
-        # Body text
-        draw_wrapped_text(draw, slide_body, 120, next_y + 40, width - 240, font_body, TEXT_MUTED, line_spacing=14)
+        # Large Headline
+        next_y = draw_wrapped_text(draw, slide_headline, 100, 320, width - 200, font_slide_header, TEXT_PRIMARY, line_spacing=22)
 
-        # Slide Navigation Dots at bottom
-        dot_start_x = width // 2 - (len(slides) * 30) // 2
+        # Large Body Text
+        chosen_font = font_body_large if len(slide_body) < 140 else font_body_regular
+        next_y2 = draw_wrapped_text(draw, slide_body, 100, next_y + 35, width - 200, chosen_font, (241, 245, 249), line_spacing=20)
+
+        # Actionable Takeaway Box in lower card
+        callout_y = max(next_y2 + 35, 780)
+        draw.rounded_rectangle([100, callout_y, width - 100, callout_y + 160], radius=24, fill=(15, 23, 42), outline=BRAND_ACCENT, width=2)
+        draw.text((130, callout_y + 26), ">> STRATEGIC EXECUTION TAKEAWAY", font=get_bold_font(28), fill=BRAND_ACCENT)
+        draw.text((130, callout_y + 75), "Apply this framework to eliminate 15+ hours of manual editing.", font=get_default_font(34), fill=TEXT_PRIMARY)
+
+        # Slide Navigation Dots at bottom of card
+        dot_start_x = width // 2 - (len(slides) * 36) // 2
         for dot_i in range(len(slides)):
-            dot_color = BRAND_PRIMARY if (dot_i + 1) == i else BRAND_SURFACE
-            outline_color = BRAND_ACCENT if (dot_i + 1) == i else (100, 116, 139)
-            draw.ellipse([dot_start_x + dot_i * 30, height - 260, dot_start_x + dot_i * 30 + 16, height - 244], fill=dot_color, outline=outline_color)
+            is_active = (dot_i + 1) == i
+            w_dot = 22 if is_active else 16
+            dot_color = BRAND_PRIMARY if is_active else BRAND_SURFACE
+            outline_color = BRAND_ACCENT if is_active else (71, 85, 105)
+            draw.ellipse([dot_start_x + dot_i * 36, 1050, dot_start_x + dot_i * 36 + w_dot, 1050 + w_dot], fill=dot_color, outline=outline_color, width=2)
 
         # CTA Footer
-        draw.text((120, height - 130), f"Swipe >> {cta}", font=font_small, fill=BRAND_ACCENT)
-        draw.text((120, height - 85), "incubrix.com | Verified Creator OS Engine", font=font_small, fill=TEXT_MUTED)
+        draw.text((80, height - 110), f"Swipe >> {cta}", font=get_bold_font(32), fill=BRAND_ACCENT)
+        draw.text((80, height - 68), "incubrix.com | Verified Creator OS Engine", font=font_small, fill=TEXT_MUTED)
 
         slide_path = os.path.join(output_dir, f"{asset_id}_slide_{i}.png")
         img.save(slide_path, "PNG")
@@ -440,7 +468,7 @@ def render_graphic(
     output_dir: str = "output/assets"
 ) -> Tuple[str, str]:
     """
-    Renders a square 1080x1080 PNG quote/infographic card.
+    Renders a square 1080x1080 PNG quote/infographic card with bold, readable typography.
     """
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     width, height = 1080, 1080
@@ -450,28 +478,46 @@ def render_graphic(
     draw = ImageDraw.Draw(img)
 
     # Subtle gradient top
-    for y_grad in range(0, 300):
-        alpha = int(45 * (1 - y_grad / 300))
-        draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 4 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 3))
+    for y_grad in range(0, 350):
+        alpha = int(55 * (1 - y_grad / 350))
+        draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2 + alpha))
 
     # Badge
     draw_header_badge(draw, text="INCUBRIX STRATEGIC BRIEF", width=width)
 
-    # Main Card
-    draw.rounded_rectangle([70, 180, width - 70, height - 160], radius=24, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=2)
+    # Main Card (1080x1080 proportional layout)
+    card_x0, card_x1 = 50, width - 50
+    card_y0, card_y1 = 180, height - 90
+    draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=32, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
 
-    font_headline = get_bold_font(46)
-    font_body = get_default_font(34)
+    font_headline = get_bold_font(58)
+    font_body_large = get_bold_font(44)
+    font_body_regular = get_default_font(38)
+    font_pill = get_bold_font(30)
     font_small = get_default_font(26)
 
-    draw.text((120, 230), "KEY TAKEAWAY", font=font_small, fill=BRAND_SECONDARY)
-    next_y = draw_wrapped_text(draw, headline, 120, 290, width - 240, font_headline, TEXT_PRIMARY, line_spacing=14)
+    # Eyebrow Pill
+    pill_text = "KEY TAKEAWAY  *  PROVEN SYSTEM"
+    bbox_p = draw.textbbox((0, 0), pill_text, font=font_pill)
+    pill_w = (bbox_p[2] - bbox_p[0]) + 56
+    draw.rounded_rectangle([90, 215, 90 + pill_w, 275], radius=28, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+    draw.text((118, 229), pill_text, font=font_pill, fill=BRAND_SECONDARY)
 
-    draw_wrapped_text(draw, body_text, 120, next_y + 35, width - 240, font_body, TEXT_MUTED, line_spacing=14)
+    # Large Headline
+    next_y = draw_wrapped_text(draw, headline, 90, 305, width - 180, font_headline, TEXT_PRIMARY, line_spacing=22)
 
-    # Footer CTA
-    draw.rounded_rectangle([70, height - 130, width - 70, height - 50], radius=16, fill=(15, 23, 42), outline=BRAND_ACCENT, width=1)
-    draw.text((100, height - 100), f"Read complete strategy: {cta}", font=font_small, fill=BRAND_ACCENT)
+    # Large Body Text
+    chosen_font = font_body_large if len(body_text) < 140 else font_body_regular
+    next_y2 = draw_wrapped_text(draw, body_text, 90, next_y + 35, width - 180, chosen_font, (241, 245, 249), line_spacing=20)
+
+    # Verified System Callout Box at bottom of card
+    callout_y = max(next_y2 + 35, 690)
+    draw.rounded_rectangle([90, callout_y, width - 90, callout_y + 140], radius=24, fill=(15, 23, 42), outline=BRAND_ACCENT, width=2)
+    draw.text((120, callout_y + 22), ">> CORE OPERATIONAL STRATEGY", font=get_bold_font(28), fill=BRAND_ACCENT)
+    draw.text((120, callout_y + 68), f"Strategy: {cta}", font=get_bold_font(32), fill=TEXT_PRIMARY)
+
+    # Footer
+    draw.text((60, height - 60), "incubrix.com  *  Verified AI Content Engine  *  #CreatorOS", font=font_small, fill=TEXT_MUTED)
 
     img.save(graphic_path, "PNG")
 

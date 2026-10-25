@@ -658,8 +658,9 @@ elif page == "🔍 Asset Review & Editor":
                                 st.session_state[slide_key] = cur + 1
                                 st.rerun()
 
-                        # Main slide display
-                        st.image(str(slide_files[cur]), use_container_width=True)
+                        # Main slide display (fresh bytes to bypass browser caching)
+                        with open(str(slide_files[cur]), "rb") as s_f:
+                            st.image(s_f.read(), use_container_width=True)
 
                         # Thumbnail strip (click to jump)
                         if total_slides > 1:
@@ -693,7 +694,8 @@ elif page == "🔍 Asset Review & Editor":
                 # -------------------------------------------------------
                 elif creative_path.lower().endswith(".mp4"):
                     if os.path.exists(creative_path):
-                        st.video(creative_path)
+                        with open(creative_path, "rb") as vf:
+                            st.video(vf.read())
                     else:
                         st.warning(f"Video file not found: {creative_path}")
 
@@ -702,7 +704,8 @@ elif page == "🔍 Asset Review & Editor":
                 # -------------------------------------------------------
                 elif creative_path.lower().endswith(".png") or creative_path.lower().endswith(".jpg"):
                     if os.path.exists(creative_path):
-                        st.image(creative_path, use_container_width=True)
+                        with open(creative_path, "rb") as img_f:
+                            st.image(img_f.read(), use_container_width=True)
                         with open(creative_path, "rb") as f:
                             st.download_button(
                                 label="⬇️ Download Image PNG",
