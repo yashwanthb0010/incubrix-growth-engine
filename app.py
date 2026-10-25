@@ -281,7 +281,10 @@ if page == "📊 Dashboard":
 
         if video_sample:
             st.caption(f"**Latest Short Video:** `{video_sample['asset_id']}` ({video_sample['platform'].upper()})")
-            st.video(video_sample["creative_file_path"])
+            sc_path = video_sample["creative_file_path"]
+            sc_mtime = int(os.path.getmtime(sc_path)) if os.path.exists(sc_path) else 0
+            with open(sc_path, "rb") as sc_f:
+                st.video(sc_f.read(), format="video/mp4", key=f"dashboard_sample_vid_{sc_mtime}")
         elif carousel_sample:
             # Count all slides for this carousel
             cover = Path(carousel_sample["creative_file_path"])
@@ -694,8 +697,9 @@ elif page == "🔍 Asset Review & Editor":
                 # -------------------------------------------------------
                 elif creative_path.lower().endswith(".mp4"):
                     if os.path.exists(creative_path):
+                        mtime = int(os.path.getmtime(creative_path))
                         with open(creative_path, "rb") as vf:
-                            st.video(vf.read())
+                            st.video(vf.read(), format="video/mp4", key=f"video_player_{asset['asset_id']}_{mtime}")
                     else:
                         st.warning(f"Video file not found: {creative_path}")
 

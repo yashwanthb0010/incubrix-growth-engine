@@ -1,11 +1,11 @@
 """
-IncuBrix Media Renderer - Real-Time Social Motion Engine
+IncuBrix Media Renderer - Proportional Social Media Production Engine
 Generates verified, platform-native creative files:
-1. Real vertical MP4 short videos (1080x1920, 9:16) with authentic social UI overlay,
-   kinetic extra-bold typography (64-74px), animated audio visualizer, and live engagement metrics.
-2. High-contrast square PNG executive graphics/quote cards (1080x1080) with large bold typography
-   and structured 3-step value blocks.
-3. Multi-slide vertical PNG carousel decks (1080x1350, 4:5 vertical).
+1. Full vertical MP4 short videos (1080x1920, 9:16) with fitted card stage,
+   extra-bold prominent typography (64-74px), 150px animated audio waveform bars,
+   and proportional timeline pacing (hook -> step breakdown -> verified destination).
+2. Square executive graphics/quote cards (1080x1080) with bold typography and 3-step value blocks.
+3. Multi-slide vertical carousel decks (1080x1350, 4:5 vertical).
 4. Structured editable source files (.json) for every asset.
 """
 
@@ -25,27 +25,27 @@ try:
 except Exception:
     FFMPEG_EXE = None
 
-# Brand Design Tokens
-BRAND_DARK_BG = (10, 15, 30)       # Deep space dark #0A0F1E
-BRAND_SURFACE = (19, 27, 46)       # Surface card #131B2E
-BRAND_PRIMARY = (99, 102, 241)     # Electric Indigo #6366F1
-BRAND_SECONDARY = (236, 72, 153)   # Neon Pink #EC4899
-BRAND_ACCENT = (56, 189, 248)      # Vivid Sky Blue #38BDF8
-BRAND_YELLOW = (250, 204, 21)      # High-Visibility Yellow #FACC15
-BRAND_SUCCESS = (16, 185, 129)     # Emerald Green #10B981
+# Original IncuBrix Design Tokens
+BRAND_DARK_BG = (15, 23, 42)       # #0F172A
+BRAND_SURFACE = (30, 41, 59)       # #1E293B
+BRAND_PRIMARY = (99, 102, 241)     # #6366F1 Electric Indigo
+BRAND_SECONDARY = (236, 72, 153)   # #EC4899 Neon Pink
+BRAND_ACCENT = (56, 189, 248)      # #38BDF8 Vivid Sky Blue
+BRAND_SUCCESS = (16, 185, 129)     # #10B981 Emerald Green
+BRAND_YELLOW = (250, 204, 21)      # #FACC15 Accent Yellow
 TEXT_PRIMARY = (255, 255, 255)
 TEXT_MUTED = (148, 163, 184)
 
 
 def get_default_font(size: int = 36) -> ImageFont.ImageFont:
-    """Attempts to load a standard system sans-serif font, fallback to default."""
-    font_candidates = [
+    """Loads standard system sans-serif font, fallback to default."""
+    candidates = [
         "C:\\Windows\\Fonts\\segoeui.ttf",
         "C:\\Windows\\Fonts\\arial.ttf",
         "C:\\Windows\\Fonts\\calibri.ttf",
         "C:\\Windows\\Fonts\\tahoma.ttf"
     ]
-    for path in font_candidates:
+    for path in candidates:
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
@@ -55,19 +55,32 @@ def get_default_font(size: int = 36) -> ImageFont.ImageFont:
 
 
 def get_bold_font(size: int = 44) -> ImageFont.ImageFont:
-    font_candidates = [
+    candidates = [
         "C:\\Windows\\Fonts\\segoeuib.ttf",
         "C:\\Windows\\Fonts\\arialbd.ttf",
         "C:\\Windows\\Fonts\\calibrib.ttf",
         "C:\\Windows\\Fonts\\trebucbd.ttf"
     ]
-    for path in font_candidates:
+    for path in candidates:
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
             except Exception:
                 continue
     return get_default_font(size)
+
+
+def draw_header_badge(draw: ImageDraw.ImageDraw, text: str = "INCUBRIX SHORTS ENGINE", width: int = 1080):
+    badge_w = 640
+    badge_h = 84
+    x0 = (width - badge_w) // 2
+    y0 = 60
+    draw.rounded_rectangle([x0, y0, x0 + badge_w, y0 + badge_h], radius=42, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
+    font_badge = get_bold_font(34)
+    bbox = draw.textbbox((0, 0), text, font=font_badge)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+    draw.text((x0 + (badge_w - tw) // 2, y0 + (badge_h - th) // 2 - 2), text, font=font_badge, fill=BRAND_ACCENT)
 
 
 def draw_wrapped_text(
@@ -78,10 +91,8 @@ def draw_wrapped_text(
     max_width: int,
     font: ImageFont.ImageFont,
     fill: Tuple[int, int, int],
-    line_spacing: int = 14,
-    draw_shadow: bool = False
+    line_spacing: int = 18
 ) -> int:
-    """Wraps text within max_width and returns the bottom Y coordinate."""
     words = text.split()
     lines = []
     current_line = []
@@ -89,8 +100,7 @@ def draw_wrapped_text(
     for word in words:
         test_line = " ".join(current_line + [word])
         bbox = draw.textbbox((0, 0), test_line, font=font)
-        w = bbox[2] - bbox[0]
-        if w <= max_width:
+        if bbox[2] - bbox[0] <= max_width:
             current_line.append(word)
         else:
             if current_line:
@@ -102,52 +112,11 @@ def draw_wrapped_text(
 
     curr_y = y
     for line in lines:
-        if draw_shadow:
-            draw.text((x + 4, curr_y + 4), line, font=font, fill=(0, 0, 0))
         draw.text((x, curr_y), line, font=font, fill=fill)
         bbox = draw.textbbox((0, 0), line, font=font)
         curr_y += (bbox[3] - bbox[1]) + line_spacing
 
     return curr_y
-
-
-# Clean vector helpers to avoid missing Unicode glyph boxes on Windows
-def draw_vector_heart(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 24, fill=(236, 72, 153)):
-    r = size // 3
-    draw.ellipse([cx - size // 2, cy - size // 2, cx, cy - size // 2 + size // 2], fill=fill)
-    draw.ellipse([cx, cy - size // 2, cx + size // 2, cy - size // 2 + size // 2], fill=fill)
-    draw.polygon([(cx - size // 2, cy - size // 6), (cx + size // 2, cy - size // 6), (cx, cy + size // 2)], fill=fill)
-
-
-def draw_vector_chat(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 24, fill=(255, 255, 255)):
-    draw.rounded_rectangle([cx - size // 2, cy - size // 2, cx + size // 2, cy + size // 4], radius=6, fill=fill)
-    draw.polygon([(cx - size // 4, cy + size // 4), (cx, cy + size // 4), (cx - size // 3, cy + size // 2)], fill=fill)
-
-
-def draw_vector_share(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 24, fill=(56, 189, 248)):
-    draw.line([(cx - size // 3, cy + size // 3), (cx + size // 4, cy - size // 4)], fill=fill, width=4)
-    draw.polygon([(cx + size // 4, cy - size // 4), (cx, cy - size // 4), (cx + size // 4, cy)], fill=fill)
-
-
-def draw_vector_bookmark(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 24, fill=(250, 204, 21)):
-    w, h = size // 2, size * 2 // 3
-    draw.polygon([(cx - w, cy - h // 2), (cx + w, cy - h // 2), (cx + w, cy + h // 2), (cx, cy + h // 4), (cx - w, cy + h // 2)], fill=fill)
-
-
-def draw_vector_check(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 16, fill=(255, 255, 255), width=3):
-    draw.line([(cx - size // 2, cy), (cx - size // 6, cy + size // 3), (cx + size // 2, cy - size // 2)], fill=fill, width=width)
-
-
-def draw_vector_lightning(draw: ImageDraw.ImageDraw, cx: int, cy: int, size: int = 20, fill=(250, 204, 21)):
-    pts = [
-        (cx + size // 4, cy - size // 2),
-        (cx - size // 3, cy),
-        (cx, cy),
-        (cx - size // 4, cy + size // 2),
-        (cx + size // 3, cy - size // 6),
-        (cx, cy - size // 6)
-    ]
-    draw.polygon(pts, fill=fill)
 
 
 def render_short_video(
@@ -160,9 +129,10 @@ def render_short_video(
     fps: int = 15
 ) -> Tuple[str, str]:
     """
-    Renders high-production vertical short video (1080x1920, 9:16) with
-    authentic social video interface overlay, kinetic extra-bold captions (64-74px),
-    animated multi-color audio visualizer, and proportional pacing.
+    Renders an actual 1080x1920 vertical MP4 video fitted to the 9:16 aspect ratio.
+    Features the beloved original IncuBrix Shorts Engine aesthetic, scaled up with
+    prominent extra-bold typography (64-72px), 150px animated audio waveforms,
+    and proportional timeline pacing (Hook -> Step Breakdown -> Verified Destination).
     """
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     mp4_path = os.path.join(output_dir, f"{asset_id}.mp4")
@@ -173,19 +143,21 @@ def render_short_video(
     # Proportional Timeline Segmentation
     hook_duration = min(6.0, max(2.5, duration_seconds * 0.16))
     cta_duration = min(6.0, max(2.0, duration_seconds * 0.14))
-    breakdown_duration = max(1.0, duration_seconds - hook_duration - cta_duration)
+    body_duration = max(1.0, duration_seconds - hook_duration - cta_duration)
 
     num_steps = len(script_lines) if script_lines else 1
-    step_duration = breakdown_duration / num_steps
+    step_duration = body_duration / num_steps
 
-    font_hook = get_bold_font(72)
-    font_step = get_bold_font(64)
+    # High-Impact Proportional Fonts
+    font_hero_hook = get_bold_font(72)
+    font_hero_step = get_bold_font(64)
+    font_pill = get_bold_font(32)
+    font_body = get_default_font(40)
     font_cta = get_bold_font(60)
-    font_pill_large = get_bold_font(32)
-    font_pill_medium = get_bold_font(28)
-    font_sub = get_default_font(26)
 
-    content_max_w = width - 260  # Room for right engagement sidebar
+    # Main Card Bounds (Fitted to 9:16 Canvas, from y=180 to y=1720)
+    card_x0, card_x1 = 60, width - 60
+    card_y0, card_y1 = 180, 1720
 
     use_ffmpeg = FFMPEG_EXE is not None and os.path.exists(FFMPEG_EXE)
     pipe = None
@@ -219,126 +191,117 @@ def render_short_video(
     for frame_idx in range(total_frames):
         current_time = frame_idx / fps
 
+        # Base Frame
         img = Image.new("RGB", (width, height), BRAND_DARK_BG)
         draw = ImageDraw.Draw(img)
 
-        # 1. Atmospheric Ambient Glow
-        glow_y = int(380 + 90 * math.sin(frame_idx * 0.12))
-        for r in range(450, 0, -30):
-            alpha = int(45 * (1 - r / 450))
-            draw.ellipse(
-                [540 - r, glow_y - r, 540 + r, glow_y + r],
-                fill=(BRAND_PRIMARY[0] // 4 + alpha, 10, BRAND_SECONDARY[2] // 4 + alpha)
-            )
+        # 1. Subtle top gradient
+        for y_grad in range(0, 450):
+            alpha = int(65 * (1 - y_grad / 450))
+            draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2 + alpha))
 
-        # 2. Authentic Social Header Overlay
-        # Avatar
-        draw.ellipse([50, 60, 130, 140], fill=BRAND_PRIMARY)
-        draw.text((72, 82), "IX", font=get_bold_font(36), fill=TEXT_PRIMARY)
-        # Handle
-        draw.text((150, 72), "incubrix.growth", font=get_bold_font(34), fill=TEXT_PRIMARY)
-        # Verified Badge
-        draw.ellipse([395, 78, 427, 110], fill=BRAND_ACCENT)
-        draw_vector_check(draw, 411, 94, size=14, fill=TEXT_PRIMARY, width=3)
-        # Audio track info
-        draw.text((150, 114), "Original Audio • IncuBrix Growth OS", font=font_sub, fill=BRAND_ACCENT)
+        # 2. Header Badge (Original IncuBrix Style)
+        draw_header_badge(draw, text="INCUBRIX SHORTS ENGINE", width=width)
 
-        # Top real-time progress bar (0 to 100%)
-        overall_pct = min(1.0, max(0.0, current_time / duration_seconds))
-        draw.rectangle([0, 0, width, 12], fill=(30, 41, 59))
-        draw.rectangle([0, 0, int(width * overall_pct), 12], fill=BRAND_SECONDARY)
+        # 3. Top Progress Bar
+        progress = min(1.0, max(0.0, current_time / duration_seconds))
+        bar_w = int(width * progress)
+        draw.rectangle([0, 0, width, 14], fill=BRAND_SURFACE)
+        draw.rectangle([0, 0, bar_w, 14], fill=BRAND_SECONDARY)
 
-        # 3. Right-Side Social Engagement Bar (Reels / TikTok / Shorts)
-        side_x = width - 110
-        side_start_y = 750
-        icons_def = [
-            ("heart", "38.4K", BRAND_SECONDARY),
-            ("chat", "1,240", TEXT_PRIMARY),
-            ("share", "4.9K", BRAND_ACCENT),
-            ("bookmark", "2.1K", BRAND_YELLOW)
-        ]
-        for i, (itype, count, icol) in enumerate(icons_def):
-            iy = side_start_y + i * 140
-            draw.ellipse([side_x - 32, iy - 32, side_x + 32, iy + 32], fill=(25, 33, 56), outline=(51, 65, 85), width=2)
-            if itype == "heart":
-                draw_vector_heart(draw, side_x, iy, size=24, fill=icol)
-            elif itype == "chat":
-                draw_vector_chat(draw, side_x, iy, size=24, fill=icol)
-            elif itype == "share":
-                draw_vector_share(draw, side_x, iy, size=24, fill=icol)
-            elif itype == "bookmark":
-                draw_vector_bookmark(draw, side_x, iy, size=24, fill=icol)
-            draw.text((side_x - 22, iy + 40), count, font=get_bold_font(20), fill=TEXT_PRIMARY)
-
-        # 4. Phased Content
+        # 4. Central Content Switching by Timeline
         if current_time < hook_duration:
-            # ---------------- HOOK PHASE ----------------
-            draw.rounded_rectangle([60, 220, 520, 290], radius=35, fill=(30, 27, 75), outline=BRAND_YELLOW, width=3)
-            draw_vector_lightning(draw, 90, 255, size=22, fill=BRAND_YELLOW)
-            draw.text((115, 238), "ATTENTION CREATORS", font=font_pill_large, fill=BRAND_YELLOW)
+            # ---------------- HOOK PHASE (0 - 2.5s / 6s) ----------------
+            draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=4)
 
-            # Giant kinetic captions with drop shadow
-            hook_y = draw_wrapped_text(draw, hook, 60, 330, content_max_w, font_hook, TEXT_PRIMARY, line_spacing=20, draw_shadow=True)
+            # Eyebrow Pill
+            pill_txt = "[ STOP WASTING 18 HOURS/WEEK ]"
+            bbox_p = draw.textbbox((0, 0), pill_txt, font=font_pill)
+            pw = (bbox_p[2] - bbox_p[0]) + 50
+            draw.rounded_rectangle([100, 230, 100 + pw, 300], radius=35, fill=(15, 23, 42), outline=BRAND_ACCENT, width=2)
+            draw.text((125, 248), pill_txt, font=font_pill, fill=BRAND_ACCENT)
 
-            # Animated Radar Graphic in Center
-            cx, cy = 460, 960
-            r_pulse = int(18 * math.sin(frame_idx * 0.4))
-            draw.ellipse([cx - 150 - r_pulse, cy - 150 - r_pulse, cx + 150 + r_pulse, cy + 150 + r_pulse], outline=BRAND_PRIMARY, width=4)
-            draw.ellipse([cx - 95, cy - 95, cx + 95, cy + 95], outline=BRAND_SECONDARY, width=5)
-            draw.ellipse([cx - 45 + r_pulse, cy - 45 + r_pulse, cx + 45 - r_pulse, cy + 45 - r_pulse], fill=BRAND_YELLOW)
-            draw.text((cx - 165, cy + 175), "AI REPURPOSING MATRIX", font=get_bold_font(28), fill=BRAND_ACCENT)
+            # Prominent Hook Headline (fills upper card with 72px bold text)
+            next_y = draw_wrapped_text(draw, f'"{hook}"', 100, 340, width - 200, font_hero_hook, TEXT_PRIMARY, line_spacing=24)
+
+            # Animated Concentric Pulse Ring (Original Style, expanded)
+            cx, cy = 540, 960
+            pulse = int(math.sin(frame_idx * 0.4) * 20)
+            draw.ellipse([cx - 160 - pulse, cy - 160 - pulse, cx + 160 + pulse, cy + 160 + pulse], outline=(51, 65, 85), width=3)
+            draw.ellipse([cx - 100 - pulse // 2, cy - 100 - pulse // 2, cx + 100 + pulse // 2, cy + 100 + pulse // 2], outline=BRAND_PRIMARY, width=4)
+            draw.ellipse([cx - 45, cy - 45, cx + 45, cy + 45], fill=BRAND_SECONDARY)
+            draw.text((cx - 170, cy + 160), "VIRAL HOOK INITIALIZED", font=font_pill, fill=BRAND_ACCENT)
+
+            # Bottom Takeaway Callout inside the card
+            draw.rounded_rectangle([100, 1480, width - 100, 1640], radius=24, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=2)
+            draw.text((130, 1515), ">> CORE OPERATIONAL STRATEGY", font=get_bold_font(28), fill=BRAND_ACCENT)
+            draw.text((130, 1565), "Turn 1 Long Video Into a Week of Native Posts", font=get_bold_font(34), fill=TEXT_PRIMARY)
 
         elif current_time < (duration_seconds - cta_duration):
             # ---------------- STEP BREAKDOWN PHASE ----------------
             step_idx = min(num_steps - 1, max(0, int((current_time - hook_duration) / step_duration)))
             step_text = script_lines[step_idx] if script_lines else "Multiply your content into 30 native assets."
+
+            draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_ACCENT, width=4)
+
+            # Step Pill
+            pill_txt = f"OPERATIONAL FRAMEWORK #{step_idx + 1}"
+            bbox_p = draw.textbbox((0, 0), pill_txt, font=font_pill)
+            pw = (bbox_p[2] - bbox_p[0]) + 50
+            draw.rounded_rectangle([100, 230, 100 + pw, 300], radius=35, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+            draw.text((125, 248), pill_txt, font=font_pill, fill=BRAND_SECONDARY)
+
+            # Step Headline (64px Bold)
+            next_y = draw_wrapped_text(draw, step_text, 100, 340, width - 200, font_hero_step, TEXT_PRIMARY, line_spacing=22)
+
+            # Prominent Animated Sound Waveform Bars (Original Style, now 150px tall across the center!)
+            base_x = 120
+            wave_y_base = 1000
+            for bar_i in range(20):
+                wave_h = max(20, int(90 + 70 * math.sin(frame_idx * 0.5 + bar_i * 0.5)))
+                bar_col = BRAND_ACCENT if bar_i % 2 == 0 else BRAND_SECONDARY
+                draw.rounded_rectangle([base_x + bar_i * 42, wave_y_base - wave_h, base_x + bar_i * 42 + 24, wave_y_base], radius=8, fill=bar_col)
+
+            # Step Progress Bar inside the card
             step_elapsed = current_time - hook_duration - (step_idx * step_duration)
             step_pct = min(1.0, max(0.0, step_elapsed / step_duration))
+            draw.rounded_rectangle([100, 1080, width - 100, 1106], radius=13, fill=(15, 23, 42))
+            draw.rounded_rectangle([100, 1080, 100 + int((width - 200) * step_pct), 1106], radius=13, fill=BRAND_ACCENT)
+            draw.text((100, 1130), f"Step {step_idx + 1} of {num_steps}  •  {int(step_pct * 100)}% Complete", font=font_pill, fill=TEXT_MUTED)
 
-            step_txt = f"STEP {step_idx + 1} OF {num_steps}"
-            draw.rounded_rectangle([60, 220, 370, 290], radius=35, fill=BRAND_SECONDARY)
-            draw.text((95, 238), step_txt, font=font_pill_large, fill=TEXT_PRIMARY)
-            draw.text((390, 242), "• OPERATIONAL FRAMEWORK", font=font_pill_medium, fill=BRAND_ACCENT)
-
-            step_y = draw_wrapped_text(draw, step_text, 60, 330, content_max_w, font_step, TEXT_PRIMARY, line_spacing=18, draw_shadow=True)
-
-            # Dynamic 22-Bar Audio Visualizer
-            base_x = 70
-            for b in range(22):
-                h_bar = max(30, int(90 + 75 * math.sin(frame_idx * 0.5 + b * 0.48)))
-                b_col = BRAND_ACCENT if b % 2 == 0 else BRAND_YELLOW
-                draw.rounded_rectangle([base_x + b * 36, 1050 - h_bar, base_x + b * 36 + 24, 1050], radius=10, fill=b_col)
-
-            # Step Progress Scrubber
-            draw.rounded_rectangle([60, 1100, width - 200, 1122], radius=11, fill=(30, 41, 59))
-            draw.rounded_rectangle([60, 1100, 60 + int((width - 260) * step_pct), 1122], radius=11, fill=BRAND_ACCENT)
-            draw.text((60, 1135), f"Step Progress: {int(step_pct * 100)}%", font=font_pill_medium, fill=TEXT_MUTED)
+            # Bottom Takeaway Callout inside the card
+            draw.rounded_rectangle([100, 1480, width - 100, 1640], radius=24, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=2)
+            draw.text((130, 1515), ">> SYSTEMATIC AUTOMATION", font=get_bold_font(28), fill=BRAND_ACCENT)
+            draw.text((130, 1565), "Eliminate 18 hours of manual video editing weekly.", font=get_bold_font(34), fill=TEXT_PRIMARY)
 
         else:
             # ---------------- CTA & FINALE PHASE ----------------
-            draw.rounded_rectangle([60, 220, 480, 290], radius=35, fill=(6, 78, 59), outline=BRAND_SUCCESS, width=3)
-            draw_vector_check(draw, 90, 255, size=18, fill=BRAND_SUCCESS, width=4)
-            draw.text((115, 238), "READY TO LAUNCH", font=font_pill_large, fill=BRAND_SUCCESS)
+            draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=36, fill=BRAND_SURFACE, outline=BRAND_SUCCESS, width=4)
 
-            cta_y = draw_wrapped_text(draw, cta, 60, 330, content_max_w, font_cta, TEXT_PRIMARY, line_spacing=18, draw_shadow=True)
+            pill_txt = "OFFICIAL VERIFIED DESTINATION"
+            bbox_p = draw.textbbox((0, 0), pill_txt, font=font_pill)
+            pw = (bbox_p[2] - bbox_p[0]) + 50
+            draw.rounded_rectangle([100, 230, 100 + pw, 300], radius=35, fill=(15, 23, 42), outline=BRAND_SUCCESS, width=2)
+            draw.text((125, 248), pill_txt, font=font_pill, fill=BRAND_SUCCESS)
 
-            # Giant Action Button
-            btn_y = 800
-            draw.rounded_rectangle([60, btn_y, width - 200, btn_y + 140], radius=40, fill=(79, 70, 229), outline=BRAND_YELLOW, width=4)
+            next_y = draw_wrapped_text(draw, cta, 100, 340, width - 200, font_cta, TEXT_PRIMARY, line_spacing=24)
+
+            # Giant Verified Button
+            btn_y0, btn_y1 = 880, 1060
+            draw.rounded_rectangle([100, btn_y0, width - 100, btn_y1], radius=36, fill=BRAND_PRIMARY, outline=(129, 140, 248), width=3)
             btn_str = "VISIT: incubrix.com ->"
-            bbox_b = draw.textbbox((0, 0), btn_str, font=get_bold_font(52))
+            bbox_b = draw.textbbox((0, 0), btn_str, font=font_cta)
             bw = bbox_b[2] - bbox_b[0]
-            draw.text((60 + (width - 260 - bw) // 2, btn_y + 42), btn_str, font=get_bold_font(52), fill=TEXT_PRIMARY)
+            draw.text((100 + (width - 200 - bw) // 2, btn_y0 + 52), btn_str, font=font_cta, fill=TEXT_PRIMARY)
 
-        # 5. Bottom Anchored Callout Banner
-        bot_y0, bot_y1 = height - 320, height - 160
-        draw.rounded_rectangle([50, bot_y0, width - 180, bot_y1], radius=28, fill=(15, 23, 42), outline=BRAND_PRIMARY, width=3)
-        draw_vector_lightning(draw, 78, bot_y0 + 40, size=20, fill=BRAND_YELLOW)
-        draw.text((100, bot_y0 + 26), "INCUBRIX CREATOR OS", font=font_pill_large, fill=BRAND_YELLOW)
-        draw.text((80, bot_y0 + 74), "1 Input -> 30 Ready-to-Publish Assets Weekly", font=get_bold_font(32), fill=TEXT_PRIMARY)
+            # Bottom Guarantee Callout inside the card
+            draw.rounded_rectangle([100, 1480, width - 100, 1640], radius=24, fill=(15, 23, 42), outline=BRAND_SUCCESS, width=2)
+            draw.text((130, 1515), ">> TURNKEY LAUNCH READY", font=get_bold_font(28), fill=BRAND_SUCCESS)
+            draw.text((130, 1565), "Start posting with zero extra effort today.", font=get_bold_font(34), fill=TEXT_PRIMARY)
 
-        # Caption snippet
-        draw.text((50, height - 130), "#ContentRepurposing #GrowthOS #SocialEngine", font=font_sub, fill=BRAND_ACCENT)
+        # 5. Footer Metadata (Original Style)
+        draw.text((60, height - 120), "#CreatorOS #ContentRepurposing #GrowthEngine", font=get_bold_font(30), fill=TEXT_MUTED)
+        draw.text((60, height - 70), "IncuBrix AI Social Growth Engine | 1080x1920 (9:16 Vertical)", font=get_default_font(26), fill=TEXT_MUTED)
 
         # Output frame
         if pipe:
@@ -393,30 +356,28 @@ def render_graphic(
     draw = ImageDraw.Draw(img)
 
     # Gradient top glow
-    for y_grad in range(0, 420):
-        alpha = int(60 * (1 - y_grad / 420))
-        draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, 15, BRAND_SECONDARY[2] // 3 + alpha))
+    for y_grad in range(0, 360):
+        alpha = int(55 * (1 - y_grad / 360))
+        draw.line([(0, y_grad), (width, y_grad)], fill=(BRAND_PRIMARY[0] // 3 + alpha, BRAND_PRIMARY[1] // 4, BRAND_PRIMARY[2] // 2 + alpha))
 
-    # Header Badge: IncuBrix Verified Channel
-    bx, by, bw, bh = 60, 60, width - 120, 90
-    draw.rounded_rectangle([bx, by, bx + bw, by + bh], radius=24, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=2)
-    draw.ellipse([bx + 18, by + 18, bx + 72, by + 72], fill=BRAND_PRIMARY)
-    draw.text((bx + 32, by + 28), "IX", font=get_bold_font(28), fill=TEXT_PRIMARY)
-    draw.text((bx + 90, by + 30), "INCUBRIX CREATOR OPERATIONS", font=get_bold_font(28), fill=TEXT_PRIMARY)
-    draw.ellipse([bx + bw - 55, by + 28, bx + bw - 23, by + 60], fill=BRAND_ACCENT)
-    draw_vector_check(draw, bx + bw - 39, by + 44, size=14, fill=TEXT_PRIMARY, width=3)
+    # Header Badge (Original Style)
+    draw_header_badge(draw, text="INCUBRIX STRATEGIC BRIEF", width=width)
+
+    # Main Card (fills 1080x1080 square canvas cleanly)
+    card_x0, card_x1 = 60, width - 60
+    card_y0, card_y1 = 180, height - 90
+    draw.rounded_rectangle([card_x0, card_y0, card_x1, card_y1], radius=32, fill=BRAND_SURFACE, outline=BRAND_PRIMARY, width=3)
 
     # Eyebrow Pill
-    eyebrow_text = "STRATEGIC BLUEPRINT • ZERO EXTRA EFFORT"
+    eyebrow_text = "KEY TAKEAWAY  •  PROVEN SYSTEM"
     bbox_e = draw.textbbox((0, 0), eyebrow_text, font=get_bold_font(26))
     ew = (bbox_e[2] - bbox_e[0]) + 50
-    draw.rounded_rectangle([60, 185, 60 + ew, 245], radius=30, fill=(30, 27, 75), outline=BRAND_YELLOW, width=2)
-    draw_vector_lightning(draw, 80, 215, size=18, fill=BRAND_YELLOW)
-    draw.text((100, 202), eyebrow_text, font=get_bold_font(26), fill=BRAND_YELLOW)
+    draw.rounded_rectangle([100, 220, 100 + ew, 280], radius=30, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
+    draw.text((125, 236), eyebrow_text, font=get_bold_font(26), fill=BRAND_SECONDARY)
 
-    # Large, bold, non-truncated headline (60px)
-    font_hl = get_bold_font(60)
-    cur_y = draw_wrapped_text(draw, headline, 60, 275, width - 120, font_hl, TEXT_PRIMARY, line_spacing=16)
+    # Large Headline (60px Bold, never truncated)
+    font_hl = get_bold_font(58)
+    cur_y = draw_wrapped_text(draw, headline, 100, 310, width - 200, font_hl, TEXT_PRIMARY, line_spacing=18)
 
     # 3-Step Systematic Value Blocks
     bullets = [
@@ -424,27 +385,25 @@ def render_graphic(
         ("02", "Native Video, Carousel Decks & Short Posts"),
         ("03", "Full Attribution with Tracked UTMs at incubrix.com")
     ]
-    cur_y += 28
+    cur_y += 25
     for num, b_txt in bullets:
-        draw.rounded_rectangle([60, cur_y, width - 60, cur_y + 80], radius=18, fill=BRAND_SURFACE, outline=(51, 65, 85), width=2)
-        draw.rounded_rectangle([75, cur_y + 16, 125, cur_y + 64], radius=12, fill=BRAND_PRIMARY)
-        draw.text((85, cur_y + 24), num, font=get_bold_font(22), fill=TEXT_PRIMARY)
-        draw.text((145, cur_y + 26), b_txt, font=get_bold_font(28), fill=(241, 245, 249))
+        draw.rounded_rectangle([100, cur_y, width - 100, cur_y + 80], radius=18, fill=(15, 23, 42), outline=(51, 65, 85), width=2)
+        draw.rounded_rectangle([115, cur_y + 16, 165, cur_y + 64], radius=12, fill=BRAND_PRIMARY)
+        draw.text((125, cur_y + 24), num, font=get_bold_font(22), fill=TEXT_PRIMARY)
+        draw.text((185, cur_y + 26), b_txt, font=get_bold_font(28), fill=(241, 245, 249))
         cur_y += 98
 
-    # CTA Banner
-    cur_y = max(cur_y + 15, height - 190)
-    draw.rounded_rectangle([60, cur_y, width - 60, cur_y + 100], radius=24, fill=(30, 41, 59), outline=BRAND_SECONDARY, width=3)
-    draw_vector_lightning(draw, 85, cur_y + 36, size=18, fill=BRAND_ACCENT)
-    draw.text((105, cur_y + 20), "ACTIONABLE OPERATING PROCEDURE", font=get_bold_font(22), fill=BRAND_ACCENT)
-    draw.text((90, cur_y + 52), f"Explore System: {cta}", font=get_bold_font(28), fill=TEXT_PRIMARY)
+    # Bottom CTA Box
+    cur_y = max(cur_y + 15, height - 200)
+    draw.rounded_rectangle([100, cur_y, width - 100, cur_y + 85], radius=20, fill=(15, 23, 42), outline=BRAND_ACCENT, width=2)
+    draw.text((130, cur_y + 16), ">> CORE OPERATIONAL STRATEGY", font=get_bold_font(20), fill=BRAND_ACCENT)
+    draw.text((130, cur_y + 44), f"Strategy: {cta}", font=get_bold_font(26), fill=TEXT_PRIMARY)
 
     # Footer
-    draw.text((60, height - 55), "IncuBrix Growth Engine • Verified Submission Kit", font=get_default_font(22), fill=TEXT_MUTED)
+    draw.text((60, height - 60), "incubrix.com  •  Verified AI Content Engine  •  #CreatorOS", font=get_default_font(22), fill=TEXT_MUTED)
 
     img.save(graphic_path, "PNG")
 
-    # Save editable source JSON
     source_path = os.path.join("output/editable_sources", f"{asset_id}_source.json")
     Path("output/editable_sources").mkdir(parents=True, exist_ok=True)
     source_data = {
@@ -476,9 +435,9 @@ def render_carousel(
     width, height = 1080, 1350
     primary_cover_path = os.path.join(output_dir, f"{asset_id}_slide_1.png")
 
-    font_slide_header = get_bold_font(60)
-    font_body_large = get_bold_font(46)
-    font_body_regular = get_default_font(40)
+    font_slide_header = get_bold_font(58)
+    font_body_large = get_bold_font(44)
+    font_body_regular = get_default_font(38)
     font_pill = get_bold_font(30)
     font_small = get_default_font(26)
 
@@ -513,7 +472,7 @@ def render_carousel(
         slide_body = slide.get("body", "")
 
         # Eyebrow Pill
-        pill_text = f"INSIGHT #{i} • CORE FRAMEWORK"
+        pill_text = f"INSIGHT #{i}  •  CORE FRAMEWORK"
         bbox_p = draw.textbbox((0, 0), pill_text, font=font_pill)
         pill_w = (bbox_p[2] - bbox_p[0]) + 56
         draw.rounded_rectangle([100, 230, 100 + pill_w, 290], radius=30, fill=(15, 23, 42), outline=BRAND_SECONDARY, width=2)
@@ -549,7 +508,6 @@ def render_carousel(
         img.save(slide_path, "PNG")
         rendered_slides_paths.append(slide_path)
 
-    # Save editable source JSON
     source_path = os.path.join("output/editable_sources", f"{asset_id}_source.json")
     Path("output/editable_sources").mkdir(parents=True, exist_ok=True)
     source_data = {
