@@ -1,16 +1,13 @@
 {
   "asset_id": "UNIT_TEST_REEL",
-  "format": "video_mp4",
-  "resolution": "1080x1920",
+  "format": "vertical_video_9_16",
   "duration_seconds": 3,
   "fps": 10,
+  "dimensions": "1080x1920",
   "hook": "High Impact Video Hook",
-  "storyboard_script": [
+  "script_lines": [
     "Step 1",
     "Step 2"
   ],
-  "cta": "incubrix.com",
-  "destination_url": "https://incubrix.com",
-  "audio_track": "rights_cleared_ambient_soundwave",
-  "render_engine": "FFmpeg"
+  "cta": "incubrix.com"
 }

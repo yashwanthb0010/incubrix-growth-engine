@@ -486,22 +486,36 @@ class ContentGenerator:
                 cta=cta
             )
         else:
-            # Native post: Render an accompanying branded preview card
-            headline = hook[:50]
-            body = f"LinkedIn Native Post Asset Definition\nWord Count: {len(caption.split())}\n{caption[:120]}..."
-            img_path, _ = render_graphic(asset_id=asset_id, headline=headline, body_text=body, cta=cta)
-            
-            # Save editable source JSON
-            editable_path = os.path.join("output/editable_sources", f"{asset_id}_source.json")
-            Path("output/editable_sources").mkdir(parents=True, exist_ok=True)
-            with open(editable_path, "w", encoding="utf-8") as f:
-                json.dump({
-                    "asset_id": asset_id,
-                    "format": "native_post_text",
-                    "hook": hook,
-                    "caption": caption,
-                    "cta": cta,
-                    "destination_url": "https://incubrix.com"
-                }, f, indent=2)
+            # Native post: High-impact branded preview card without debug metadata
+            headline = hook
+            lines = [l.strip() for l in caption.split('\n') if l.strip()]
+            clean_parts = [
+                l for l in lines
+                if not l.startswith('http') and not l.startswith('#')
+                and 'Word Count:' not in l and 'Asset Definition' not in l
+            ]
+            body = ' '.join(clean_parts[1:3]) if len(clean_parts) > 1 else (clean_parts[0] if clean_parts else hook)
+            if len(body) > 180:
+                body = body[:177] + '...'
+            return render_graphic(
+                asset_id=asset_id,
+                headline=headline,
+                body_text=body,
+                cta=cta
+            )
 
-            return img_path, editable_path
+            source_def = {
+                "asset_id": asset_id,
+                "format": "native_post_text",
+                "headline": headline,
+                "body_text": body,
+                "hook": hook,
+                "caption": caption,
+                "cta": cta,
+                "destination_url": destination_url
+            }
+            with open(editable_path, "w", encoding="utf-8") as f:
+                json.dump(source_def, f, indent=2)
+
+            creative_file_path = img_path
+        

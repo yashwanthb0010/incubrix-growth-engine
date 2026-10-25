@@ -1,6 +1,6 @@
 {
   "asset_id": "UNIT_TEST_CAROUSEL",
-  "format": "carousel_png",
+  "format": "vertical_carousel_4_5",
   "slide_count": 2,
   "dimensions": "1080x1350",
   "title": "Test Carousel Deck",
@@ -16,7 +16,7 @@
   ],
   "cta": "incubrix.com",
   "rendered_files": [
-    "C:\\Users\\Yashwanth\\AppData\\Local\\Temp\\pytest-of-Yashwanth\\pytest-12\\test_carousel_rendering0\\assets\\UNIT_TEST_CAROUSEL_slide_1.png",
-    "C:\\Users\\Yashwanth\\AppData\\Local\\Temp\\pytest-of-Yashwanth\\pytest-12\\test_carousel_rendering0\\assets\\UNIT_TEST_CAROUSEL_slide_2.png"
+    "C:\\Users\\Yashwanth\\AppData\\Local\\Temp\\pytest-of-Yashwanth\\pytest-16\\test_carousel_rendering0\\assets\\UNIT_TEST_CAROUSEL_slide_1.png",
+    "C:\\Users\\Yashwanth\\AppData\\Local\\Temp\\pytest-of-Yashwanth\\pytest-16\\test_carousel_rendering0\\assets\\UNIT_TEST_CAROUSEL_slide_2.png"
   ]
 }

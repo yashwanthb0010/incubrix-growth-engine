@@ -1,11 +1,11 @@
 {
   "asset_id": "YT_SHORT_001",
-  "format": "video_mp4",
-  "resolution": "1080x1920",
+  "format": "vertical_video_9_16",
   "duration_seconds": 15,
   "fps": 15,
+  "dimensions": "1080x1920",
   "hook": "Stop spending 18 hours editing. Here is how to turn 1 blog into 30 assets.",
-  "storyboard_script": [
+  "script_lines": [
     "Step 1: Anchor your core insight (Standard test content about digital crea).",
     "Step 2: Edit video like text -- delete transcript words to prune video frames.",
     "Step 3: Extract 5 native layers: Shorts, Reels, Carousels, and LinkedIn teardowns.",
@@ -13,8 +13,5 @@
     "Step 5: Attach verified UTM campaign tracking links for exact sign-up ROI.",
     "Step 6: Schedule and dispatch natively to YouTube, Instagram, and LinkedIn in 1 click."
   ],
-  "cta": "Streamline your creator workflow at incubrix.com",
-  "destination_url": "https://incubrix.com",
-  "audio_track": "rights_cleared_ambient_soundwave",
-  "render_engine": "FFmpeg"
+  "cta": "Streamline your creator workflow at incubrix.com"
 }
